@@ -1,0 +1,7 @@
+.listingDiv {
+	margin: 10px;
+}
+
+.listingDiv:hover {
+	color: yellow;
+}

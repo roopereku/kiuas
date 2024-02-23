@@ -1,0 +1,13 @@
+form {
+	display: flex;
+	flex-direction: column;
+}
+
+form > * {
+	margin: 3px;
+}
+
+label {
+	color: #ff667d;
+	font-size: small;
+}
