@@ -1,4 +1,6 @@
-import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-panel";
+import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-panel"
+import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
+import { Button } from "@react-md/button";
 import { useState, useEffect } from "react"
 import QuizListing from "./QuizListing.js"
 import "./QuizSelector.css"
@@ -7,6 +9,22 @@ const QuizSelector = () => {
 	const [shouldUpdateListings, setShouldUpdateListings] = useState(false)
 	const [categories, setCategories] = useState([])
 	const [expanded, setExpanded] = useState([])
+
+	const [infoVisible, setInfoVisible] = useState(false)
+	const [currentInfo, setCurrentInfo] = useState({})
+
+	const showListingInfo = (id, name) => {
+		setCurrentInfo({
+			id: id,
+			name: name
+		})
+
+		setInfoVisible(true)
+	}
+
+	const hideListingInfo = () => {
+		setInfoVisible(false)
+	}
 
 	useEffect(() => {
 		setShouldUpdateListings(false)
@@ -62,12 +80,40 @@ const QuizSelector = () => {
 							}}
 						>
 						{category.children.map((listing) => {
-							return <QuizListing key={listing.id} name={listing.name} />
+							return (
+								<QuizListing
+									key={listing.id}
+									name={listing.name}
+									id={listing.id}
+									showListingInfo={showListingInfo}
+								/>
+							)
 						})}
 						</ExpansionPanel>
 					)
 				})}
 			</ExpansionList>
+
+			<Dialog
+				id="listing-dialog"
+				role="alertdialog"
+				modal={true}
+				visible={infoVisible}
+				aria-labelledby="listing-dialog-title"
+			>
+				<DialogContent>
+					<h3>{currentInfo.name}</h3>
+				</DialogContent>
+
+				<DialogFooter>
+					<Button
+						onClick={hideListingInfo}
+						theme="primary"
+					>
+						Close
+					</Button>
+				</DialogFooter>
+			</Dialog>
 		</div>
 	)
 }
