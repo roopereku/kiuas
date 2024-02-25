@@ -1,6 +1,6 @@
 import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-panel"
 import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
-import { Select, useSelectState } from "@react-md/form"
+import { CheckBox, Select, useSelectState } from "@react-md/form"
 import { Divider} from "@react-md/divider"
 import { Button } from "@react-md/button";
 import { TextIconSpacing } from "@react-md/icon"
@@ -130,6 +130,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							theme="primary"
 							onClick={() => setSelectedQuiz({
 								id: currentInfo.id,
+								name: currentInfo.name,
 								showEditor: false
 							})}
 						>
@@ -143,6 +144,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							theme="primary"
 							onClick={() => setSelectedQuiz({
 								id: currentInfo.id,
+								name: currentInfo.name,
 								isEditing: false
 							})}
 						>
@@ -157,6 +159,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 					<Button
 						onClick={() => setSelectedQuiz({
 							id: currentInfo.id,
+							name: currentInfo.name,
 							isEditing: true
 						})}
 						theme="primary"

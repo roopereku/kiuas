@@ -71,6 +71,29 @@ const getListings = (username) => {
 	return listings
 }
 
+const isValidQuiz = (quizId) => {
+	// TODO: Get this from the database.
+	return true
+}
+
+const getQuestionIds = (quizId) => {
+	if(isValidQuiz(quizId))
+	{
+		// TODO: Get this from the database.
+		return [ "que1id", "que2id", "que2id", "que4id" ]
+	}
+
+	return []
+}
+
+const getQuestion = (questionId) => {
+	// TODO: Get this from the database.
+	return {
+		question: "Stub question",
+		image: ""
+	}
+}
+
 router.get("/listings", (req, res) => {
 	// If the user isn't logged in, send an empty array.
 	if(!login.isValidSession(req))
@@ -82,6 +105,65 @@ router.get("/listings", (req, res) => {
 	// Send the listings to the user.
 	const listings = getListings(login.getUsername(req))
 	res.send(JSON.stringify(listings))
+})
+
+router.get("/question/getids/:quizId", (req, res) => {
+	console.log("nii", req.params.quizId)
+
+	// If the user isn't logged in, send an empty array.
+	if(!login.isValidSession(req))
+	{
+		res.send("[]")
+		return
+	}
+
+	// Get the ID of every question of the given quiz.
+	let questionIds = getQuestionIds(req.params.quizId)
+
+	// If question IDs were returned, operate on them.
+	if(questionIds.length > 0)
+	{
+		// First shuffle the questions if necessary.
+		if("shuffle" in req.query)
+		{
+			questionIds = questionIds
+				.map(id => ({ id , sort: Math.random() }))
+				.sort((a, b) => a.sort - b.sort)
+				.map(({ id }) => id)
+		}
+
+		// If a max question amount is given, cut the ID array.
+		if("max" in req.query)
+		{
+			if(questionIds.length >= req.query.max)
+			{
+				questionIds = questionIds.slice(0, req.query.max)
+			}
+		}
+	}
+
+	console.log(questionIds)
+
+	res.send(JSON.stringify(questionIds))
+})
+
+router.get("/question/:questionId", (req, res) => {
+	// If the user isn't logged in, send an empty JSON body.
+	if(!login.isValidSession(req))
+	{
+		res.send("{}")
+		return
+	}
+
+	const question = getQuestion(req.params.questionId)
+	if(question === undefined)
+	{
+		// If no question was received, send an empty JSON body.
+		res.send("{}")
+		return
+	}
+
+	return JSON.stringify(question)
 })
 
 module.exports.router = router
