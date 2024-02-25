@@ -1,5 +1,6 @@
 import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-panel"
 import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
+import { Select, useSelectState } from "@react-md/form"
 import { Button } from "@react-md/button";
 import { useState, useEffect } from "react"
 import QuizListing from "./QuizListing.js"
@@ -13,11 +14,19 @@ const QuizSelector = () => {
 	const [infoVisible, setInfoVisible] = useState(false)
 	const [currentInfo, setCurrentInfo] = useState({})
 
+	const [revision, handleRevisionChange] = useSelectState("nii")
+	const [revisionOptions, setRevisionOptions] = useState([])
+
 	const showListingInfo = (id, name) => {
 		setCurrentInfo({
 			id: id,
 			name: name
 		})
+
+		// TODO: Get this from the backend.
+		setRevisionOptions([
+			"Rev1", "Rev2", "Rev3"
+		])
 
 		setInfoVisible(true)
 	}
@@ -103,6 +112,14 @@ const QuizSelector = () => {
 			>
 				<DialogContent>
 					<h3>{currentInfo.name}</h3>
+
+					<Select
+						label="Select revision"
+						name="selectRevision"
+						value={revision}
+						options={revisionOptions}
+						onChange={handleRevisionChange}
+					/>
 				</DialogContent>
 
 				<DialogFooter>
