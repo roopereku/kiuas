@@ -1,6 +1,7 @@
 import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-panel"
 import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
 import { Select, useSelectState } from "@react-md/form"
+import { Divider} from "@react-md/divider"
 import { Button } from "@react-md/button";
 import { TextIconSpacing } from "@react-md/icon"
 import { CreateSVGIcon, InsertPhotoSVGIcon } from "@react-md/material-icons"
@@ -8,7 +9,7 @@ import { useState, useEffect } from "react"
 import QuizListing from "./QuizListing.js"
 import "./QuizSelector.css"
 
-const QuizSelector = () => {
+const QuizSelector = ({setSelectedQuiz}) => {
 	const [shouldUpdateListings, setShouldUpdateListings] = useState(false)
 	const [categories, setCategories] = useState([])
 	const [expanded, setExpanded] = useState([])
@@ -124,15 +125,27 @@ const QuizSelector = () => {
 					/>
 
 					<div id="playButtons">
-						<p>Play</p>
-
-						<Button themeType="contained" theme="primary">
+						<Button
+							themeType="contained"
+							theme="primary"
+							onClick={() => setSelectedQuiz({
+								id: currentInfo.id,
+								showEditor: false
+							})}
+						>
 							<TextIconSpacing icon={<CreateSVGIcon />}>
 								Type
 							</TextIconSpacing>
 						</Button>
 
-						<Button themeType="contained" theme="primary">
+						<Button
+							themeType="contained"
+							theme="primary"
+							onClick={() => setSelectedQuiz({
+								id: currentInfo.id,
+								isEditing: false
+							})}
+						>
 							<TextIconSpacing icon={<InsertPhotoSVGIcon />}>
 								Card
 							</TextIconSpacing>
@@ -142,11 +155,22 @@ const QuizSelector = () => {
 
 				<DialogFooter>
 					<Button
+						onClick={() => setSelectedQuiz({
+							id: currentInfo.id,
+							isEditing: true
+						})}
+						theme="primary"
+					>
+						Edit quiz
+					</Button>
+
+					<Button
 						onClick={hideListingInfo}
 						theme="primary"
 					>
 						Close
 					</Button>
+					
 				</DialogFooter>
 			</Dialog>
 		</div>
