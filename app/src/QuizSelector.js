@@ -2,6 +2,8 @@ import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-p
 import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
 import { Select, useSelectState } from "@react-md/form"
 import { Button } from "@react-md/button";
+import { TextIconSpacing } from "@react-md/icon"
+import { CreateSVGIcon, InsertPhotoSVGIcon } from "@react-md/material-icons"
 import { useState, useEffect } from "react"
 import QuizListing from "./QuizListing.js"
 import "./QuizSelector.css"
@@ -120,6 +122,22 @@ const QuizSelector = () => {
 						options={revisionOptions}
 						onChange={handleRevisionChange}
 					/>
+
+					<div id="playButtons">
+						<p>Play</p>
+
+						<Button themeType="contained" theme="primary">
+							<TextIconSpacing icon={<CreateSVGIcon />}>
+								Type
+							</TextIconSpacing>
+						</Button>
+
+						<Button themeType="contained" theme="primary">
+							<TextIconSpacing icon={<InsertPhotoSVGIcon />}>
+								Card
+							</TextIconSpacing>
+						</Button>
+					</div>
 				</DialogContent>
 
 				<DialogFooter>

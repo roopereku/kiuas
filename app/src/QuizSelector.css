@@ -7,3 +7,15 @@
 .rmd-expansion-panel__header {
 	display: block;
 }
+
+#playButtons {
+	margin-top: 20px;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#playButtons > button {
+	margin: 5px;
+}
