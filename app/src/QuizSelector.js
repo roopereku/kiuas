@@ -87,7 +87,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							expanded={expanded[category.index]}
 							onExpandClick={() => {
 								setExpanded(categories.map((entry) => {
-									return entry.index == category.index
+									return entry.index === category.index
 								}))
 							}}
 						>

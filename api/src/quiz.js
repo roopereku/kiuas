@@ -3,6 +3,7 @@ const express = require("express")
 const cookieParser = require("cookie-parser")
 
 const login = require("./login.js")
+const edit = require("./edit.js")
 
 const router = express.Router()
 router.use(cookieParser())
@@ -22,31 +23,11 @@ const quizdata = {
 	},
 	"quizid2": {
 		name: "Test Quiz 2",
-		category: "Cat2",
-		questions: [
-			{
-				question: "Test question 1",
-				answer: "Test answer 1"
-			},
-			{
-				question: "Test question 2",
-				answer: "Test answer 2"
-			}
-		]
+		category: "Cat2"
 	},
 	"quizid3": {
 		name: "Test Quiz 3",
-		category: "long category name",
-		questions: [
-			{
-				question: "Test question 1",
-				answer: "Test answer 1"
-			},
-			{
-				question: "Test question 2",
-				answer: "Test answer 2"
-			}
-		]
+		category: "long category name"
 	},
 	"quizid4": {
 		name: "Test Quiz 4",
@@ -76,22 +57,21 @@ const isValidQuiz = (quizId) => {
 	return true
 }
 
-const getQuestionIds = (quizId) => {
-	if(isValidQuiz(quizId))
+const getQuestionIds = (req) => {
+	if(isValidQuiz(req.params.quizId))
 	{
+		const ids = []
+
+		for(let i = 0; i < 50; i++)
+		{
+			ids.push("que" + i.toString())
+		}
+
 		// TODO: Get this from the database.
-		return [ "que1id", "que2id", "que2id", "que4id" ]
+		return ids
 	}
 
-	return []
-}
-
-const getQuestion = (questionId) => {
-	// TODO: Get this from the database.
-	return {
-		question: "Stub question",
-		image: ""
-	}
+	return {}
 }
 
 router.get("/listings", (req, res) => {
@@ -107,18 +87,17 @@ router.get("/listings", (req, res) => {
 	res.send(JSON.stringify(listings))
 })
 
-router.get("/question/getids/:quizId", (req, res) => {
-	console.log("nii", req.params.quizId)
-
-	// If the user isn't logged in, send an empty array.
+// Returns the ID for question for every question within the given revision of a quiz.
+router.get("/questionids/:quizId/:revision", (req, res) => {
+	// If the user isn't logged in, send an JSON body.
 	if(!login.isValidSession(req))
 	{
-		res.send("[]")
+		res.send("{}")
 		return
 	}
 
-	// Get the ID of every question of the given quiz.
-	let questionIds = getQuestionIds(req.params.quizId)
+	// Get data of every question in the given quiz.
+	let questionIds = getQuestionIds(req)
 
 	// If question IDs were returned, operate on them.
 	if(questionIds.length > 0)
@@ -142,28 +121,7 @@ router.get("/question/getids/:quizId", (req, res) => {
 		}
 	}
 
-	console.log(questionIds)
-
 	res.send(JSON.stringify(questionIds))
-})
-
-router.get("/question/:questionId", (req, res) => {
-	// If the user isn't logged in, send an empty JSON body.
-	if(!login.isValidSession(req))
-	{
-		res.send("{}")
-		return
-	}
-
-	const question = getQuestion(req.params.questionId)
-	if(question === undefined)
-	{
-		// If no question was received, send an empty JSON body.
-		res.send("{}")
-		return
-	}
-
-	return JSON.stringify(question)
 })
 
 module.exports.router = router

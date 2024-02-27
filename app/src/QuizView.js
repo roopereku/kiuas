@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react"
 import { TextField } from "@react-md/form"
 
+import QuestionView from "./QuestionView.js"
+
 const QuizView = ({selected}) => {
 	const [quizName, setQuizName] = useState(selected.name)
 	const [questionIds, setQuestionIds] = useState([])
+	const [currentQuestion, setCurrentQuestion] = useState({})
 
 	useEffect(() => {
-		fetch("api/quiz/question/getids/" + selected.id)
+		// TODO: Get revision from QuizSelector.
+		fetch("api/quiz/questionids/" + selected.id + "/XXXX")
 			.then((res) => res.json())
 			.then((ids) => {
-				console.log(ids)
 				setQuestionIds(ids)
 			})
 	}, [])
@@ -29,6 +32,8 @@ const QuizView = ({selected}) => {
 					</p>
 				)
 			}
+
+			{}
 		</div>
 	)
 }
