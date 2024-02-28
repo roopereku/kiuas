@@ -87,9 +87,23 @@ router.get("/listings", (req, res) => {
 	res.send(JSON.stringify(listings))
 })
 
+router.get("/question/:questionId", (req, res) => {
+	// If the user isn't logged in, send an empty JSON body.
+	if(!login.isValidSession(req))
+	{
+		res.send("{}")
+		return
+	}
+
+	res.send(JSON.stringify({
+		question: "Test question for " + req.params.questionId,
+		image: ""
+	}))
+})
+
 // Returns the ID for question for every question within the given revision of a quiz.
 router.get("/questionids/:quizId/:revision", (req, res) => {
-	// If the user isn't logged in, send an JSON body.
+	// If the user isn't logged in, send an empty JSON body.
 	if(!login.isValidSession(req))
 	{
 		res.send("{}")
