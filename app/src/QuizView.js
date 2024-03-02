@@ -4,9 +4,19 @@ import { Button } from "@react-md/button"
 import { Chip } from "@react-md/chip"
 import { Sheet } from "@react-md/sheet";
 import { TextIconSpacing } from "@react-md/icon"
-import { TocSVGIcon, ChevronLeftSVGIcon, ChevronRightSVGIcon } from "@react-md/material-icons"
 import { MediaContainer } from "@react-md/media"
 import { Overlay } from "@react-md/overlay";
+import "./QuizView.css"
+
+import
+{
+	TocSVGIcon,
+	ChevronLeftSVGIcon,
+	ChevronRightSVGIcon,
+	AddCircleSVGIcon,
+	RemoveCircleSVGIcon,
+}
+from "@react-md/material-icons"
 
 const QuizView = ({selected}) => {
 	const [quizName, setQuizName] = useState(selected.name)
@@ -18,6 +28,11 @@ const QuizView = ({selected}) => {
 	const [focusedImage, setFocusedImage] = useState("")
 
 	useEffect(() => {
+		if(selected.isNew || selected.isEditing)
+		{
+			return
+		}
+
 		// TODO: Get revision from QuizSelector.
 		fetch("api/quiz/questionids/" + selected.id + "/XXXX")
 			.then((res) => res.json())
@@ -49,21 +64,16 @@ const QuizView = ({selected}) => {
 			}
 
 			<p>{currentQuestion.question}</p>
-			{currentQuestion.image !== "" ?
-				(
-					<MediaContainer
-						width={1}
-						height={1}
-						onClick={() => {
-							setFocusedImage(currentQuestion.image)
-							setImageOverlayVisible(true)
-						}}
-					>
-						<img src={currentQuestion.image}></img>
-					</MediaContainer>
-				) :
-				null
-			}
+			<MediaContainer
+				width={1}
+				height={1}
+				onClick={() => {
+					setFocusedImage(currentQuestion.image)
+					setImageOverlayVisible(true)
+				}}
+			>
+				<img src={currentQuestion.image}></img>
+			</MediaContainer>
 			
 			<Overlay
 				visible={imageOverlayVisible}
@@ -117,6 +127,49 @@ const QuizView = ({selected}) => {
 					Next
 				</TextIconSpacing>
 			</Button>
+
+			{selected.isEditing ?
+				(
+					<div id="editButtons">
+						<Button
+							themeType="contained"
+							theme="primary"
+							onClick={() => {
+								fetch("api/edit/question/remove", {
+									method: "POST",
+								})
+									.then((res) => res.json())
+									.then((json) =>  {
+										console.log("After remove", json)
+									})
+							}}
+						>
+							<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
+								Remove
+							</TextIconSpacing>
+						</Button>
+
+						<Button
+							themeType="contained"
+							theme="primary"
+							onClick={() => {
+								fetch("api/edit/question/add", {
+									method: "POST",
+								})
+									.then((res) => res.json())
+									.then((json) =>  {
+										console.log("After add", json)
+									})
+							}}
+
+						>
+							<TextIconSpacing icon={<AddCircleSVGIcon />}>
+								Add
+							</TextIconSpacing>
+						</Button>
+					</div>
+				) : null
+			}
 
 			<Sheet
 				aria-label="Question selectors"

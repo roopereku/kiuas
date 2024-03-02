@@ -76,7 +76,16 @@ const QuizSelector = ({setSelectedQuiz}) => {
 
 	return (
 		<div>
-			<h1>Listings</h1>
+			<Button
+				themeType="contained"
+				theme="primary"
+				onClick={() => setSelectedQuiz({
+					isEditing: true,
+					isNew: true
+				})}
+			>
+				Create a new quiz
+			</Button>
 
 			<ExpansionList>
 				{categories.map((category) => {
