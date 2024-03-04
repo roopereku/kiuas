@@ -4,74 +4,14 @@ const cookieParser = require("cookie-parser")
 
 const login = require("./login.js")
 const edit = require("./edit.js")
+const db = require("./database.js")
 
 const router = express.Router()
 router.use(cookieParser())
 
-const quizdata = {
-	"quizid1": {
-		name: "Test Quiz 1",
-		category: "Cat1"
-	},
-	"jkdsajkld": {
-		name: "Test Quiz jdkslfjkldsfjkldsf",
-		category: "Cat1"
-	},
-	"xkdsajkld": {
-		name: "Test Quiz in cat ejkew",
-		category: "Cat1"
-	},
-	"quizid2": {
-		name: "Test Quiz 2",
-		category: "Cat2"
-	},
-	"quizid3": {
-		name: "Test Quiz 3",
-		category: "long category name"
-	},
-	"quizid4": {
-		name: "Test Quiz 4",
-		category: "long category name",
-	},
-}
-
-const getListings = (username) => {
-	// TODO: Filter listings by username.
-	// TODO: Get listings from database.
-	const listings = []
-
-	for(const [key, value] of Object.entries(quizdata))
-	{
-		listings.push({
-			id: key,
-			name: value.name,
-			category: value.category
-		})
-	}
-
-	return listings
-}
-
-const isValidQuiz = (quizId) => {
+const isValidRevision = (revisionId) => {
 	// TODO: Get this from the database.
 	return true
-}
-
-const getQuestionIds = (req) => {
-	if(isValidQuiz(req.params.quizId))
-	{
-		const ids = []
-
-		for(let i = 0; i < 50; i++)
-		{
-			ids.push("que" + i.toString())
-		}
-
-		// TODO: Get this from the database.
-		return ids
-	}
-
-	return {}
 }
 
 router.get("/listings", (req, res) => {
@@ -82,9 +22,30 @@ router.get("/listings", (req, res) => {
 		return
 	}
 
-	// Send the listings to the user.
-	const listings = getListings(login.getUsername(req))
-	res.send(JSON.stringify(listings))
+	// Get all revisions that this user has access to.
+	db.query("SELECT id, quizid FROM revision WHERE $1 = ANY(authorized)", [ login.getUsername(req) ])
+		.then((rows) => {
+
+			// Get the quizzes that the returned revisions belong to.
+			db.query("SELECT id, name, category FROM quiz WHERE id = ANY($1)", [ rows.map((row) => row.quizid) ])
+				.then((quizRows) => {
+
+					// Filter out any irrelevant information.
+					const listings = quizRows.map((quizRow) => {
+						return {
+							category: quizRow.category,
+							name: quizRow.name,
+
+							// Associate the returned quizzes with accessible revisions.
+							revisions: rows.filter((row) => {
+								return row.quizid === quizRow.id
+							}).map((revision) => revision.id)
+						}
+					})
+
+					res.send(JSON.stringify(listings))
+				})
+		})
 })
 
 router.get("/question/:questionId", (req, res) => {
@@ -102,7 +63,7 @@ router.get("/question/:questionId", (req, res) => {
 })
 
 // Returns the ID for question for every question within the given revision of a quiz.
-router.get("/questionids/:quizId/:revision", (req, res) => {
+router.get("/questionids/:revisionId", (req, res) => {
 	// If the user isn't logged in, send an empty JSON body.
 	if(!login.isValidSession(req))
 	{
@@ -110,8 +71,7 @@ router.get("/questionids/:quizId/:revision", (req, res) => {
 		return
 	}
 
-	// Get data of every question in the given quiz.
-	let questionIds = getQuestionIds(req)
+	let questionIds = {}
 
 	// If question IDs were returned, operate on them.
 	if(questionIds.length > 0)

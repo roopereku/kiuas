@@ -14,6 +14,9 @@ router.post("/quiz/:quizId", (req, res) => {
 router.post("/question/add", (req, res) => {
 })
 
+router.post("/question/remove", (req, res) => {
+})
+
 router.post("/question/:questionId", (req, res) => {
 	// If the user isn't logged in, send "401 Not authorized".
 	if(!login.isValidSession(req))
