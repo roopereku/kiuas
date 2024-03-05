@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react"
+import { Button } from "@react-md/button";
+import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
+import RegistrationView from "./RegistrationView.js"
 import "./Login.css"
 
 const LoginChecker = ({setLoginDone}) => {
-	const [ initialCheckDone, setInitialCheckDone] = useState(false)
+	const [initialCheckDone, setInitialCheckDone] = useState(false)
 
 	useEffect(() => {
 		fetch("api/login/check")
@@ -42,11 +45,12 @@ const LoginPage = ({setLoginDone}) => {
 	const [ password, setPassword ] = useState("")
 
 	const [ error, setError ] = useState("")
+	const [registrationVisible, setRegistrationVisible] = useState(false)
 
 	const handleSubmit = (e) => {
 		e.preventDefault()
 
-		// Send the crendential to the backend.
+		// Send the crendentials to the backend.
 		fetch("api/login/", {
 			method: "POST",
 			headers: {
@@ -97,6 +101,23 @@ const LoginPage = ({setLoginDone}) => {
 				<input type="submit" id="loginSubmit" value="Login"/>
 				<label htmlFor="loginSubmit">{error}</label>
 			</form>
+
+			<Button
+				themeType="contained"
+				theme="primary"
+				onClick={() => setRegistrationVisible(true)}
+			>
+				Register
+			</Button>
+
+			<Dialog
+				visible={registrationVisible}
+				onRequestClose={() => setRegistrationVisible(false)}
+			>
+				<DialogContent>
+					<RegistrationView />
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }

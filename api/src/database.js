@@ -45,17 +45,26 @@ client.connect((err) => {
 		question TEXT NOT NULL,
 		questions TEXT []
 	);`)
+
+	client.query(`CREATE TABLE IF NOT EXISTS credential (
+		name TEXT PRIMARY KEY,
+		password TEXT NOT NULL
+	);`)
+
 })
 
 module.exports.query = (detail, params = []) => {
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		client.query(detail, params, (err, result) => {
 			if(err)
 			{
-				throw err
+				reject(err)
 			}
 
-			resolve(result.rows)
+			else
+			{
+				resolve(result.rows)
+			}
 		})
 	})
 }
