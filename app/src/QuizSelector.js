@@ -2,6 +2,8 @@ import { ExpansionList, ExpansionPanel, usePanels, } from "@react-md/expansion-p
 import { Dialog, DialogContent, DialogFooter } from "@react-md/dialog"
 import { CheckBox, Select, useSelectState } from "@react-md/form"
 import { Divider} from "@react-md/divider"
+import { Sheet } from "@react-md/sheet";
+import { Chip } from "@react-md/chip"
 import { Button } from "@react-md/button";
 import { TextIconSpacing } from "@react-md/icon"
 import { CreateSVGIcon, InsertPhotoSVGIcon } from "@react-md/material-icons"
@@ -13,6 +15,9 @@ const QuizSelector = ({setSelectedQuiz}) => {
 	const [shouldUpdateListings, setShouldUpdateListings] = useState(false)
 	const [categories, setCategories] = useState([])
 	const [expanded, setExpanded] = useState([])
+
+	const [editsVisible, setEditsVisible] = useState(false)
+	const [currentEdits, setCurrentEdits] = useState([])
 
 	const [infoVisible, setInfoVisible] = useState(false)
 	const [currentInfo, setCurrentInfo] = useState({})
@@ -36,6 +41,42 @@ const QuizSelector = ({setSelectedQuiz}) => {
 
 	const hideListingInfo = () => {
 		setInfoVisible(false)
+	}
+
+	const showCurrentEdits = () => {
+		fetch("api/edit/listings")
+			.then((res) => res.json())
+			.then((arr) => {
+				setCurrentEdits(arr)
+				setEditsVisible(true)
+			})
+	}
+
+	const startNewEdit = (revisionId) => {
+		// If no revision is given, request an editing ID for a new quiz.
+		if(revisionId === "")
+		{
+			fetch("api/edit/new", { method: "POST" })
+				.then((res) => res.json())
+				.then((json) => {
+					if(!("id" in json))
+					{
+						// TODO: Show some error message.
+						return
+					}
+
+					setSelectedQuiz({
+						id: json.id,
+						name: "New quiz",
+						isEditing: true,
+						isNew: true
+					})
+				})
+		}
+
+		else
+		{
+		}
 	}
 
 	useEffect(() => {
@@ -79,12 +120,17 @@ const QuizSelector = ({setSelectedQuiz}) => {
 			<Button
 				themeType="contained"
 				theme="primary"
-				onClick={() => setSelectedQuiz({
-					isEditing: true,
-					isNew: true
-				})}
+				onClick={() => startNewEdit("")}
 			>
 				Create a new quiz
+			</Button>
+
+			<Button
+				themeType="contained"
+				theme="primary"
+				onClick={() => showCurrentEdits()}
+			>
+				Resume an edit
 			</Button>
 
 			<ExpansionList>
@@ -140,7 +186,8 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							onClick={() => setSelectedQuiz({
 								id: currentInfo.id,
 								name: currentInfo.name,
-								showEditor: false
+								revision: revision,
+								isEditing: false
 							})}
 						>
 							<TextIconSpacing icon={<CreateSVGIcon />}>
@@ -154,6 +201,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							onClick={() => setSelectedQuiz({
 								id: currentInfo.id,
 								name: currentInfo.name,
+								revision: revision,
 								isEditing: false
 							})}
 						>
@@ -166,11 +214,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 
 				<DialogFooter>
 					<Button
-						onClick={() => setSelectedQuiz({
-							id: currentInfo.id,
-							name: currentInfo.name,
-							isEditing: true
-						})}
+						onClick={() => startNewEdit(currentInfo.revision)}
 						theme="primary"
 					>
 						Edit quiz
@@ -185,7 +229,30 @@ const QuizSelector = ({setSelectedQuiz}) => {
 					
 				</DialogFooter>
 			</Dialog>
+
+			<Sheet
+				aria-label="Edits"
+				visible={editsVisible}
+				onRequestClose={() => setEditsVisible(false)}
+				position="bottom"
+			>
+				{currentEdits.map((entry) => {
+					return (
+						<Chip
+							key={entry.id}
+							onClick={() => setSelectedQuiz({
+								id: entry.id,
+								name: entry.name,
+								isEditing: true
+							})}
+						>
+							{entry.name}
+						</Chip>
+					)
+				})}
+			</Sheet>
 		</div>
+		
 	)
 }
 

@@ -16,6 +16,7 @@ import
 	AddCircleSVGIcon,
 	RemoveCircleSVGIcon,
 }
+
 from "@react-md/material-icons"
 
 const QuizView = ({selected}) => {
@@ -28,26 +29,54 @@ const QuizView = ({selected}) => {
 	const [focusedImage, setFocusedImage] = useState("")
 
 	useEffect(() => {
-		if(selected.isNew || selected.isEditing)
+		if(selected.isNew)
 		{
 			return
 		}
 
-		// TODO: Get revision from QuizSelector.
-		fetch("api/quiz/questionids/" + selected.id + "/XXXX")
-			.then((res) => res.json())
-			.then((ids) => {
-				setQuestionIds(ids)
-				showQuestion(ids[0])
-			})
+		else if(selected.isEditing)
+		{
+			console.log("Get edit from " + selected.id)
+			fetch("api/edit/questionids/" + selected.id)
+				.then((res) => res.json())
+				.then((ids) => {
+					setQuestionIds(ids)
+					showQuestion(ids[0])
+				})
+		}
+
+		else
+		{
+			// TODO: Get revision from QuizSelector.
+			fetch("api/quiz/questionids/" + selected.id + "/XXXX")
+				.then((res) => res.json())
+				.then((ids) => {
+					setQuestionIds(ids)
+					showQuestion(ids[0])
+				})
+		}
 	}, [])
 
 	const showQuestion = (id) => {
-		fetch("api/quiz/question/" + id)
-			.then((res) => res.json())
-			.then((json) => {
-				setCurrentQuestion(json)
-			})
+		if(selected.isEditing)
+		{
+			// Get question data from the given editing context.
+			fetch("api/edit/question/" + selected.id + "/" + id)
+				.then((res) => res.json())
+				.then((json) => {
+					setCurrentQuestion(json)
+				})
+
+		}
+
+		else
+		{
+			fetch("api/quiz/question/" + id)
+				.then((res) => res.json())
+				.then((json) => {
+					setCurrentQuestion(json)
+				})
+		}
 	}
 
 	return (
@@ -63,26 +92,35 @@ const QuizView = ({selected}) => {
 				)
 			}
 
-			<p>{currentQuestion.question}</p>
-			<MediaContainer
-				width={1}
-				height={1}
-				onClick={() => {
-					setFocusedImage(currentQuestion.image)
-					setImageOverlayVisible(true)
-				}}
-			>
-				<img src={currentQuestion.image}></img>
-			</MediaContainer>
-			
-			<Overlay
-				visible={imageOverlayVisible}
-				onRequestClose={() => setImageOverlayVisible(false)}
-			>
-				<MediaContainer>
-					<img src={focusedImage}></img>
-				</MediaContainer>
-			</Overlay>
+			{questionIds.length === 0 ? 
+				(
+					<p>Nothing to show</p>
+				) :
+				(
+					<div>
+						<p>{currentQuestion.question}</p>
+						<MediaContainer
+							width={1}
+							height={1}
+							onClick={() => {
+								setFocusedImage(currentQuestion.image)
+								setImageOverlayVisible(true)
+							}}
+						>
+							<img src={currentQuestion.image}></img>
+						</MediaContainer>
+						
+						<Overlay
+							visible={imageOverlayVisible}
+							onRequestClose={() => setImageOverlayVisible(false)}
+						>
+							<MediaContainer>
+								<img src={focusedImage}></img>
+							</MediaContainer>
+						</Overlay>
+					</div>
+				)
+			}
 
 			<Button
 				themeType="contained"
@@ -153,12 +191,13 @@ const QuizView = ({selected}) => {
 							themeType="contained"
 							theme="primary"
 							onClick={() => {
-								fetch("api/edit/question/add", {
+								fetch("api/edit/question/add/" + selected.id, {
 									method: "POST",
 								})
 									.then((res) => res.json())
 									.then((json) =>  {
-										console.log("After add", json)
+										questionIds.push(json.id)
+										showQuestion(json.id)
 									})
 							}}
 
