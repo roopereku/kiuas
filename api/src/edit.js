@@ -143,16 +143,18 @@ router.post("/image/:editId/:questionId", ensureAccess, imageUpload.single("imag
 
 // Setter for a question within an editing context.
 router.post("/question/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
-	// Make sure that the request body specified the new question and image.
-	if(!("question" in req.body) || !("image" in req.body))
+	// Make sure that the request body specified the new question and answer.
+	if(!("question" in req.body) || !("answer" in req.body))
 	{
 		res.sendStatus(400)
 		return
 	}
 
-	const context = editingContext[req.params.editId]
-	const question = context.questions[req.params.questionId]
-	res.send(JSON.stringify(question))
+	const question = editingContext[req.params.editId].questions[req.params.questionId]
+	question.question = req.body.question
+	question.answer = req.body.answer
+
+	res.sendStatus(200)
 })
 
 // Getter for a question within an editing context.

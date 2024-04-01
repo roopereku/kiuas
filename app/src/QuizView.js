@@ -108,7 +108,20 @@ const QuizView = ({selected}) => {
 						{selected.isEditing ?
 							(
 								<TextField value={currentQuestion}
-									onChange={(e) => setCurrentQuestion(e.target.value)}
+									onChange={(e) => {
+										setCurrentQuestion(e.target.value)
+										fetch("api/edit/question/" + selected.id + "/" + questionIds[selectedIndex], {
+											method: "POST",
+											headers: {
+												  'Accept': 'application/json',
+												  'Content-Type': 'application/json'
+											},
+											body: JSON.stringify({
+												question: e.target.value,
+												answer: currentAnswer
+											})
+										})
+									}}
 								/>
 							) :
 							(
@@ -158,9 +171,31 @@ const QuizView = ({selected}) => {
 								<img src={focusedImage}></img>
 							</MediaContainer>
 						</Overlay>
+
+						{selected.isEditing &&
+						(
+							<TextField value={currentAnswer}
+								onChange={(e) => {
+									setCurrentAnswer(e.target.value)
+									fetch("api/edit/question/" + selected.id + "/" + questionIds[selectedIndex], {
+										method: "POST",
+										headers: {
+											  'Accept': 'application/json',
+											  'Content-Type': 'application/json'
+										},
+										body: JSON.stringify({
+											question: currentQuestion,
+											answer: e.target.value
+										})
+									})
+								}}
+							/>
+						)}
+
 					</div>
 				)
 			}
+			
 
 			<Button
 				themeType="contained"
