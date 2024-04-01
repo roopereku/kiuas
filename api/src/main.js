@@ -1,3 +1,4 @@
+const fs = require("fs")
 const express = require("express")
 const api = express()
 const router = express.Router()
@@ -13,4 +14,8 @@ router.use("/edit", edit.router)
 router.use("/images", express.static("images"))
 
 api.listen(3001, () => {
+	if(!fs.existsSync("images"))
+	{
+		fs.mkdirSync("images")
+	}
 })
