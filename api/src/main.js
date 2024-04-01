@@ -10,6 +10,7 @@ api.use("/api", router)
 router.use("/login", login.router)
 router.use("/quiz", quiz.router)
 router.use("/edit", edit.router)
+router.use("/images", express.static("images"))
 
 api.listen(3001, () => {
 })

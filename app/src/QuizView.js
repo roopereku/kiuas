@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
-import { TextField } from "@react-md/form"
 import { Button } from "@react-md/button"
 import { Chip } from "@react-md/chip"
 import { Sheet } from "@react-md/sheet";
 import { TextIconSpacing } from "@react-md/icon"
 import { MediaContainer } from "@react-md/media"
 import { Overlay } from "@react-md/overlay";
+import { TextField, FileInput, } from "@react-md/form";
+
 import "./QuizView.css"
 
 import
@@ -22,11 +23,14 @@ from "@react-md/material-icons"
 const QuizView = ({selected}) => {
 	const [quizName, setQuizName] = useState(selected.name)
 	const [questionIds, setQuestionIds] = useState([])
-	const [currentQuestion, setCurrentQuestion] = useState({})
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [selectorsVisible, setSelectorsVisible] = useState(false)
 	const [imageOverlayVisible, setImageOverlayVisible] = useState(false)
 	const [focusedImage, setFocusedImage] = useState("")
+
+	const [currentQuestion, setCurrentQuestion] = useState("")
+	const [currentImage, setCurrentImage] = useState("")
+	const [currentAnswer, setCurrentAnswer] = useState("")
 
 	useEffect(() => {
 		if(selected.isNew)
@@ -64,9 +68,11 @@ const QuizView = ({selected}) => {
 			fetch("api/edit/question/" + selected.id + "/" + id)
 				.then((res) => res.json())
 				.then((json) => {
-					setCurrentQuestion(json)
+					console.log(json)
+					setCurrentQuestion(json.question)
+					setCurrentImage(json.image)
+					setCurrentAnswer(json.answer)
 				})
-
 		}
 
 		else
@@ -74,7 +80,8 @@ const QuizView = ({selected}) => {
 			fetch("api/quiz/question/" + id)
 				.then((res) => res.json())
 				.then((json) => {
-					setCurrentQuestion(json)
+					setCurrentQuestion(json.question)
+					setCurrentImage(json.image)
 				})
 		}
 	}
@@ -98,17 +105,50 @@ const QuizView = ({selected}) => {
 				) :
 				(
 					<div>
-						<p>{currentQuestion.question}</p>
+						{selected.isEditing ?
+							(
+								<TextField value={currentQuestion}
+									onChange={(e) => setCurrentQuestion(e.target.value)}
+								/>
+							) :
+							(
+								<p>{currentQuestion}</p>
+							)
+						}
+
 						<MediaContainer
 							width={1}
 							height={1}
 							onClick={() => {
-								setFocusedImage(currentQuestion.image)
+								setFocusedImage(currentImage)
 								setImageOverlayVisible(true)
 							}}
 						>
-							<img src={currentQuestion.image}></img>
+							<img src={"api/images/" + currentImage}></img>
 						</MediaContainer>
+
+						<FileInput
+							id="questionImageInput"
+							accept="image/*"
+							onChange={(e) => {
+								console.log("Send new image")
+
+								const data = new FormData()
+								data.append("image", e.target.files[0])
+
+								fetch("api/edit/image/" + selected.id + "/" + questionIds[selectedIndex], {
+									method: "POST",
+									body: data
+								})
+									.then((res) => res.text())
+									.then((id) => {
+										setCurrentImage(id)
+									})
+							}}
+							multiple={false}
+						>
+							Upload an image
+						</FileInput>
 						
 						<Overlay
 							visible={imageOverlayVisible}
