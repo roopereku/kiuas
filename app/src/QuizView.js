@@ -6,7 +6,11 @@ import { TextIconSpacing } from "@react-md/icon"
 import { MediaContainer } from "@react-md/media"
 import { Overlay } from "@react-md/overlay";
 import { TextField, FileInput, } from "@react-md/form";
+import { Layout } from "@react-md/layout";
 
+import EditContext from "./EditContext.js"
+import EditOnly from "./EditOnly.js"
+import QuizElement from "./QuizElement.js"
 import "./QuizView.css"
 
 import
@@ -28,9 +32,7 @@ const QuizView = ({selected}) => {
 	const [imageOverlayVisible, setImageOverlayVisible] = useState(false)
 	const [focusedImage, setFocusedImage] = useState("")
 
-	const [currentQuestion, setCurrentQuestion] = useState("")
-	const [currentImage, setCurrentImage] = useState("")
-	const [currentAnswer, setCurrentAnswer] = useState("")
+	const [quizElements, setQuizElements] = useState([])
 
 	useEffect(() => {
 		if(selected.isNew)
@@ -62,16 +64,30 @@ const QuizView = ({selected}) => {
 	}, [])
 
 	const showQuestion = (id) => {
+		const updateData = (json) => {
+			console.log("Show", json)
+			setQuizElements([{
+					type: "question",
+					initialValue: json.question
+			}]
+			.concat(
+				json.answer.map((answer, answerIndex) => {
+					return {
+						type: "answer",
+						initialValue: answer,
+						answerIndex: answerIndex
+					}
+				})
+			))
+		}
+
 		if(selected.isEditing)
 		{
 			// Get question data from the given editing context.
 			fetch("api/edit/question/" + selected.id + "/" + id)
 				.then((res) => res.json())
 				.then((json) => {
-					console.log(json)
-					setCurrentQuestion(json.question)
-					setCurrentImage(json.image)
-					setCurrentAnswer(json.answer)
+					updateData(json)		
 				})
 		}
 
@@ -80,55 +96,47 @@ const QuizView = ({selected}) => {
 			fetch("api/quiz/question/" + id)
 				.then((res) => res.json())
 				.then((json) => {
-					setCurrentQuestion(json.question)
-					setCurrentImage(json.image)
+					updateData(json)		
 				})
 		}
 	}
 
 	return (
-		<div>
-			{selected.isEditing ?
-				(
-					<TextField value={quizName} onChange={(e) => setQuizName(e.target.value)} />
-				) :
-				(
-					<p>
-						{selected.name}
-					</p>
-				)
-			}
-
+		<EditContext.Provider value={selected.isEditing}>
 			{questionIds.length === 0 ? 
 				(
 					<p>Nothing to show</p>
 				) :
 				(
 					<div>
-						{selected.isEditing ?
-							(
-								<TextField value={currentQuestion}
-									onChange={(e) => {
-										setCurrentQuestion(e.target.value)
+						{
+							quizElements.map((e, index) => (
+								<QuizElement
+									key={"quizElement" + index}
+									data={e}
+									onEdit={(value) => {
+										const body = {}
+										body[e.type] = value
+
+										if(e.type === "answer")
+										{
+											body["answerIndex"] = e.answerIndex
+										}
+
 										fetch("api/edit/question/" + selected.id + "/" + questionIds[selectedIndex], {
 											method: "POST",
 											headers: {
 												  'Accept': 'application/json',
 												  'Content-Type': 'application/json'
 											},
-											body: JSON.stringify({
-												question: e.target.value,
-												answer: currentAnswer
-											})
+											body: JSON.stringify(body)
 										})
 									}}
 								/>
-							) :
-							(
-								<p>{currentQuestion}</p>
-							)
+							))
 						}
 
+						{/* TODO: Integrate images to QuizElement.
 						<MediaContainer
 							width={1}
 							height={1}
@@ -139,7 +147,9 @@ const QuizView = ({selected}) => {
 						>
 							<img src={"api/images/" + currentImage}></img>
 						</MediaContainer>
+						*/}
 
+						{/*
 						<FileInput
 							id="questionImageInput"
 							accept="image/*"
@@ -162,6 +172,7 @@ const QuizView = ({selected}) => {
 						>
 							Upload an image
 						</FileInput>
+						*/}
 						
 						<Overlay
 							visible={imageOverlayVisible}
@@ -171,27 +182,6 @@ const QuizView = ({selected}) => {
 								<img src={focusedImage}></img>
 							</MediaContainer>
 						</Overlay>
-
-						{selected.isEditing &&
-						(
-							<TextField value={currentAnswer}
-								onChange={(e) => {
-									setCurrentAnswer(e.target.value)
-									fetch("api/edit/question/" + selected.id + "/" + questionIds[selectedIndex], {
-										method: "POST",
-										headers: {
-											  'Accept': 'application/json',
-											  'Content-Type': 'application/json'
-										},
-										body: JSON.stringify({
-											question: currentQuestion,
-											answer: e.target.value
-										})
-									})
-								}}
-							/>
-						)}
-
 					</div>
 				)
 			}
@@ -241,49 +231,45 @@ const QuizView = ({selected}) => {
 				</TextIconSpacing>
 			</Button>
 
-			{selected.isEditing ?
-				(
-					<div id="editButtons">
-						<Button
-							themeType="contained"
-							theme="primary"
-							onClick={() => {
-								fetch("api/edit/question/remove", {
-									method: "POST",
-								})
-									.then((res) => res.json())
-									.then((json) =>  {
-										console.log("After remove", json)
-									})
-							}}
-						>
-							<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
-								Remove
-							</TextIconSpacing>
-						</Button>
+			<EditOnly>
+				<Button
+					themeType="contained"
+					theme="primary"
+					onClick={() => {
+						fetch("api/edit/question/remove", {
+							method: "POST",
+						})
+							.then((res) => res.json())
+							.then((json) =>  {
+								console.log("After remove", json)
+							})
+					}}
+				>
+					<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
+						Remove
+					</TextIconSpacing>
+				</Button>
 
-						<Button
-							themeType="contained"
-							theme="primary"
-							onClick={() => {
-								fetch("api/edit/question/add/" + selected.id, {
-									method: "POST",
-								})
-									.then((res) => res.json())
-									.then((json) =>  {
-										questionIds.push(json.id)
-										showQuestion(json.id)
-									})
-							}}
+				<Button
+					themeType="contained"
+					theme="primary"
+					onClick={() => {
+						fetch("api/edit/question/add/" + selected.id, {
+							method: "POST",
+						})
+							.then((res) => res.json())
+							.then((json) =>  {
+								questionIds.push(json.id)
+								showQuestion(json.id)
+							})
+					}}
 
-						>
-							<TextIconSpacing icon={<AddCircleSVGIcon />}>
-								Add
-							</TextIconSpacing>
-						</Button>
-					</div>
-				) : null
-			}
+				>
+					<TextIconSpacing icon={<AddCircleSVGIcon />}>
+						Add
+					</TextIconSpacing>
+				</Button>
+			</EditOnly>
 
 			<Sheet
 				aria-label="Question selectors"
@@ -307,7 +293,7 @@ const QuizView = ({selected}) => {
 					)
 				})}
 			</Sheet>
-		</div>
+		</EditContext.Provider>
 	)
 }
 

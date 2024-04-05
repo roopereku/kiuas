@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@react-md/app-bar": "^5.1.6",
     "@react-md/button": "^5.1.6",
     "@react-md/chip": "^5.1.6",
     "@react-md/dialog": "^5.1.6",

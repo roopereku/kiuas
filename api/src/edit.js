@@ -116,7 +116,7 @@ router.post("/question/add/:editId", ensureAccess, (req, res) => {
 
 	const newQuestion = {
 		question: "New question",
-		answer: "Default answer",
+		answer: [ "Default answer 1" ],
 		image: ""
 	}
 
@@ -143,16 +143,23 @@ router.post("/image/:editId/:questionId", ensureAccess, imageUpload.single("imag
 
 // Setter for a question within an editing context.
 router.post("/question/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
-	// Make sure that the request body specified the new question and answer.
-	if(!("question" in req.body) || !("answer" in req.body))
+	const question = editingContext[req.params.editId].questions[req.params.questionId]
+
+	if("question" in req.body)
 	{
-		res.sendStatus(400)
-		return
+		question.question = req.body.question
 	}
 
-	const question = editingContext[req.params.editId].questions[req.params.questionId]
-	question.question = req.body.question
-	question.answer = req.body.answer
+	if("answer" in req.body)
+	{
+		if(!("answerIndex" in req.body))
+		{
+			res.sendStatus(400)
+			return
+		}
+
+		question.answer[parseInt(req.body.answerIndex)] = req.body.answer
+	}
 
 	res.sendStatus(200)
 })
