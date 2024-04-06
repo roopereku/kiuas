@@ -10,9 +10,6 @@ const router = express.Router()
 router.use(bodyParser.json())
 router.use(cookieParser())
 
-const isValidEdit = (req) => {
-}
-
 const imageStorage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, "images/")
@@ -116,12 +113,17 @@ router.post("/question/add/:editId", ensureAccess, (req, res) => {
 
 	const newQuestion = {
 		question: "New question",
-		answer: [ "Default answer 1" ],
+		answer: [ "Default answer" ],
 		image: ""
 	}
 
 	editingContext[req.params.editId].questions[id] = newQuestion
 	res.send(JSON.stringify({id: id}))
+})
+
+router.post("/question/newanswer/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
+	editingContext[req.params.editId].questions[req.params.questionId].answer.push("Default answer")
+	res.sendStatus(200)
 })
 
 router.post("/question/remove/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {

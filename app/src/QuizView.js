@@ -265,6 +265,24 @@ const QuizView = ({selected}) => {
 								<img src={focusedImage}></img>
 							</MediaContainer>
 						</Overlay>
+
+						<EditOnly>
+							<Button
+								themeType="contained"
+								theme="primary"
+								onClick={() => {
+									fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
+										method: "POST",
+									})
+										.then((_) => showQuestion(questionIds[selectedIndex]))
+								}}
+
+							>
+								<TextIconSpacing icon={<AddCircleSVGIcon />}>
+									New answer
+								</TextIconSpacing>
+							</Button>
+						</EditOnly>
 					</div>
 				)
 			}
