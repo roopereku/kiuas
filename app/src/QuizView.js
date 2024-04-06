@@ -6,7 +6,7 @@ import { TextIconSpacing } from "@react-md/icon"
 import { MediaContainer } from "@react-md/media"
 import { Overlay } from "@react-md/overlay";
 import { TextField, FileInput, } from "@react-md/form";
-import { Layout } from "@react-md/layout";
+import { AppBar } from "@react-md/app-bar";
 
 import EditContext from "./EditContext.js"
 import EditOnly from "./EditOnly.js"
@@ -103,6 +103,89 @@ const QuizView = ({selected}) => {
 
 	return (
 		<EditContext.Provider value={selected.isEditing}>
+			<AppBar fixed>
+				<Button
+					themeType="contained"
+					theme="primary"
+					onClick={() => {
+						if(selectedIndex - 1 >= 0)
+						{
+							showQuestion(questionIds[selectedIndex - 1])
+							setSelectedIndex(selectedIndex - 1)
+						}
+					}}
+
+				>
+					<TextIconSpacing icon={<ChevronLeftSVGIcon />}>
+					</TextIconSpacing>
+				</Button>
+
+				<Button
+					themeType="contained"
+					theme="primary"
+					onClick={() => setSelectorsVisible(true)}
+				>
+					<TextIconSpacing icon={<TocSVGIcon />}>
+					</TextIconSpacing>
+				</Button>
+
+				<Button
+					themeType="contained"
+					theme="primary"
+					onClick={() => {
+						if(selectedIndex + 1 < questionIds.length)
+						{
+							showQuestion(questionIds[selectedIndex + 1])
+							setSelectedIndex(selectedIndex + 1)
+						}
+					}}
+
+				>
+					<TextIconSpacing icon={<ChevronRightSVGIcon />}>
+					</TextIconSpacing>
+				</Button>
+
+				<EditOnly>
+					<Button
+						themeType="contained"
+						theme="primary"
+						onClick={() => {
+							fetch("api/edit/question/remove", {
+								method: "POST",
+							})
+								.then((res) => res.json())
+								.then((json) =>  {
+									console.log("After remove", json)
+								})
+						}}
+					>
+						<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
+							Remove
+						</TextIconSpacing>
+					</Button>
+
+					<Button
+						themeType="contained"
+						theme="primary"
+						onClick={() => {
+							fetch("api/edit/question/add/" + selected.id, {
+								method: "POST",
+							})
+								.then((res) => res.json())
+								.then((json) =>  {
+									questionIds.push(json.id)
+									showQuestion(json.id)
+								})
+						}}
+
+					>
+						<TextIconSpacing icon={<AddCircleSVGIcon />}>
+							Add
+						</TextIconSpacing>
+					</Button>
+				</EditOnly>
+			</AppBar>
+
 			{questionIds.length === 0 ? 
 				(
 					<p>Nothing to show</p>
@@ -185,91 +268,6 @@ const QuizView = ({selected}) => {
 					</div>
 				)
 			}
-			
-
-			<Button
-				themeType="contained"
-				theme="primary"
-				onClick={() => {
-					if(selectedIndex - 1 >= 0)
-					{
-						showQuestion(questionIds[selectedIndex - 1])
-						setSelectedIndex(selectedIndex - 1)
-					}
-				}}
-
-			>
-				<TextIconSpacing icon={<ChevronLeftSVGIcon />}>
-					Prev
-				</TextIconSpacing>
-			</Button>
-
-			<Button
-				themeType="contained"
-				theme="primary"
-				onClick={() => setSelectorsVisible(true)}
-			>
-				<TextIconSpacing icon={<TocSVGIcon />}>
-					Show
-				</TextIconSpacing>
-			</Button>
-
-			<Button
-				themeType="contained"
-				theme="primary"
-				onClick={() => {
-					if(selectedIndex + 1 < questionIds.length)
-					{
-						showQuestion(questionIds[selectedIndex + 1])
-						setSelectedIndex(selectedIndex + 1)
-					}
-				}}
-
-			>
-				<TextIconSpacing icon={<ChevronRightSVGIcon />}>
-					Next
-				</TextIconSpacing>
-			</Button>
-
-			<EditOnly>
-				<Button
-					themeType="contained"
-					theme="primary"
-					onClick={() => {
-						fetch("api/edit/question/remove", {
-							method: "POST",
-						})
-							.then((res) => res.json())
-							.then((json) =>  {
-								console.log("After remove", json)
-							})
-					}}
-				>
-					<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
-						Remove
-					</TextIconSpacing>
-				</Button>
-
-				<Button
-					themeType="contained"
-					theme="primary"
-					onClick={() => {
-						fetch("api/edit/question/add/" + selected.id, {
-							method: "POST",
-						})
-							.then((res) => res.json())
-							.then((json) =>  {
-								questionIds.push(json.id)
-								showQuestion(json.id)
-							})
-					}}
-
-				>
-					<TextIconSpacing icon={<AddCircleSVGIcon />}>
-						Add
-					</TextIconSpacing>
-				</Button>
-			</EditOnly>
 
 			<Sheet
 				aria-label="Question selectors"
