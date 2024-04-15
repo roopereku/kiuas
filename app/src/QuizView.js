@@ -220,43 +220,6 @@ const QuizView = ({selected}) => {
 								<QuizElement
 									key={"quizElement" + index}
 									data={e}
-									onEdit={(value) => {
-										const body = {}
-										body[e.type] = value
-
-										if(e.type === "answer")
-										{
-											body["answerIndex"] = e.answerIndex
-										}
-
-										fetch("api/edit/question/" + selected.id + "/" + questionIds[selectedIndex], {
-											method: "POST",
-											headers: {
-												  'Accept': 'application/json',
-												  'Content-Type': 'application/json'
-											},
-											body: JSON.stringify(body)
-										})
-									}}
-
-									onImageUpload={(imageUrl, onUploaded) => {
-										const data = new FormData()
-										data.append("image", imageUrl)
-
-										if(e.type === "answer")
-										{
-											data.append("answerIndex", e.answerIndex)
-										}
-
-										fetch("api/edit/image/" + selected.id + "/" + questionIds[selectedIndex], {
-											method: "POST",
-											body: data
-										})
-											.then((res) => res.text())
-											.then((id) => {
-												onUploaded(id)
-											})
-									}}
 									setSettings={setSettings}
 									setSettingsVisible={setSettingsVisible}
 								/>
