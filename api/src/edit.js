@@ -60,6 +60,13 @@ const ensureValidQuestion = (req, res, next) => {
 	}
 }
 
+const addNewAnswer = (editId, questionId) => {
+	editingContext[editId].questions[questionId].answers.push({
+		answer: "Default answer",
+		image: ""
+	})
+}
+
 router.get("/listings", (req, res) => {
 	if(!login.isValidSession(req))
 	{
@@ -113,27 +120,45 @@ router.post("/question/add/:editId", ensureAccess, (req, res) => {
 
 	const newQuestion = {
 		question: "New question",
-		answer: [ "Default answer" ],
-		image: ""
+		image: "",
+		answers: []
 	}
 
 	editingContext[req.params.editId].questions[id] = newQuestion
+	addNewAnswer(req.params.editId, id)
 	res.send(JSON.stringify({id: id}))
 })
 
 router.post("/question/newanswer/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
-	editingContext[req.params.editId].questions[req.params.questionId].answer.push("Default answer")
+	addNewAnswer(req.params.editId, req.params.questionId)
 	res.sendStatus(200)
 })
 
 router.post("/question/remove/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
 })
 
-router.post("/image/:editId/:questionId", ensureAccess, imageUpload.single("image"), (req, res) => {
+router.post("/image/:editId/:questionId", ensureAccess, ensureValidQuestion, imageUpload.single("image"), (req, res) => {
+	// If the image was saved, save it to the given editing context.
 	if("resultImage" in req)
 	{
-		// If the image was saved, save it to the given editing context.
-		editingContext[req.params.editId].questions[req.params.questionId].image = req.resultImage
+		const question = editingContext[req.params.editId].questions[req.params.questionId]
+
+		// If an answer index is specified, attach the image to an answer.
+		if("answerIndex" in req.body)
+		{
+			// TODO: Delete the image if the answer index is invalid?
+			const index = parseInt(req.body.answerIndex)
+			if(index < question.answers.length)
+			{
+				question.answers[index].image = req.resultImage
+			}
+		}
+
+		else
+		{
+			question.image = req.resultImage
+		}
+
 		res.send(req.resultImage)
 	}
 
@@ -160,7 +185,7 @@ router.post("/question/:editId/:questionId", ensureAccess, ensureValidQuestion, 
 			return
 		}
 
-		question.answer[parseInt(req.body.answerIndex)] = req.body.answer
+		question.answers[parseInt(req.body.answerIndex)].answer = req.body.answer
 	}
 
 	res.sendStatus(200)

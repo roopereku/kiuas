@@ -5,8 +5,9 @@ import { Sheet } from "@react-md/sheet";
 import { TextIconSpacing } from "@react-md/icon"
 import { MediaContainer } from "@react-md/media"
 import { Overlay } from "@react-md/overlay";
-import { TextField, FileInput, } from "@react-md/form";
 import { AppBar } from "@react-md/app-bar";
+import { Typography } from "@react-md/typography";
+import { Dialog, DialogContent, DialogHeader } from "@react-md/dialog";
 
 import EditContext from "./EditContext.js"
 import EditOnly from "./EditOnly.js"
@@ -29,10 +30,10 @@ const QuizView = ({selected}) => {
 	const [questionIds, setQuestionIds] = useState([])
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [selectorsVisible, setSelectorsVisible] = useState(false)
-	const [imageOverlayVisible, setImageOverlayVisible] = useState(false)
-	const [focusedImage, setFocusedImage] = useState("")
 
 	const [quizElements, setQuizElements] = useState([])
+	const [settingsVisible, setSettingsVisible] = useState(false)
+	const [settings, setSettings] = useState({ construct: () => {} })
 
 	useEffect(() => {
 		if(selected.isNew)
@@ -68,14 +69,16 @@ const QuizView = ({selected}) => {
 			console.log("Show", json)
 			setQuizElements([{
 					type: "question",
-					initialValue: json.question
+					initialValue: json.question,
+					image: json.image
 			}]
 			.concat(
-				json.answer.map((answer, answerIndex) => {
+				json.answers.map((answer, answerIndex) => {
 					return {
 						type: "answer",
-						initialValue: answer,
-						answerIndex: answerIndex
+						initialValue: answer.answer,
+						answerIndex: answerIndex,
+						image: answer.image
 					}
 				})
 			))
@@ -183,6 +186,22 @@ const QuizView = ({selected}) => {
 							Add
 						</TextIconSpacing>
 					</Button>
+
+					<Button
+						themeType="contained"
+						theme="primary"
+						onClick={() => {
+							fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
+								method: "POST",
+							})
+								.then((_) => showQuestion(questionIds[selectedIndex]))
+						}}
+
+					>
+						<TextIconSpacing icon={<AddCircleSVGIcon />}>
+							New answer
+						</TextIconSpacing>
+					</Button>
 				</EditOnly>
 			</AppBar>
 
@@ -191,7 +210,7 @@ const QuizView = ({selected}) => {
 					<p>Nothing to show</p>
 				) :
 				(
-					<div>
+					<div id="elementContainer">
 						{
 							quizElements.map((e, index) => (
 								<QuizElement
@@ -215,77 +234,50 @@ const QuizView = ({selected}) => {
 											body: JSON.stringify(body)
 										})
 									}}
+
+									onImageUpload={(imageUrl, onUploaded) => {
+										const data = new FormData()
+										data.append("image", imageUrl)
+
+										if(e.type === "answer")
+										{
+											data.append("answerIndex", e.answerIndex)
+										}
+
+										fetch("api/edit/image/" + selected.id + "/" + questionIds[selectedIndex], {
+											method: "POST",
+											body: data
+										})
+											.then((res) => res.text())
+											.then((id) => {
+												onUploaded(id)
+											})
+									}}
+									setSettings={setSettings}
+									setSettingsVisible={setSettingsVisible}
 								/>
 							))
 						}
-
-						{/* TODO: Integrate images to QuizElement.
-						<MediaContainer
-							width={1}
-							height={1}
-							onClick={() => {
-								setFocusedImage(currentImage)
-								setImageOverlayVisible(true)
-							}}
-						>
-							<img src={"api/images/" + currentImage}></img>
-						</MediaContainer>
-						*/}
-
-						{/*
-						<FileInput
-							id="questionImageInput"
-							accept="image/*"
-							onChange={(e) => {
-								console.log("Send new image")
-
-								const data = new FormData()
-								data.append("image", e.target.files[0])
-
-								fetch("api/edit/image/" + selected.id + "/" + questionIds[selectedIndex], {
-									method: "POST",
-									body: data
-								})
-									.then((res) => res.text())
-									.then((id) => {
-										setCurrentImage(id)
-									})
-							}}
-							multiple={false}
-						>
-							Upload an image
-						</FileInput>
-						*/}
-						
-						<Overlay
-							visible={imageOverlayVisible}
-							onRequestClose={() => setImageOverlayVisible(false)}
-						>
-							<MediaContainer>
-								<img src={focusedImage}></img>
-							</MediaContainer>
-						</Overlay>
-
-						<EditOnly>
-							<Button
-								themeType="contained"
-								theme="primary"
-								onClick={() => {
-									fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
-										method: "POST",
-									})
-										.then((_) => showQuestion(questionIds[selectedIndex]))
-								}}
-
-							>
-								<TextIconSpacing icon={<AddCircleSVGIcon />}>
-									New answer
-								</TextIconSpacing>
-							</Button>
-						</EditOnly>
 					</div>
 				)
 			}
+
+			<Dialog
+				role="alertdialog"
+				modal={false}
+				visible={settingsVisible}
+				onRequestClose={() => setSettingsVisible(false)}
+			>
+				<DialogHeader>
+					<Typography type="headline-4">
+						{settings.title}
+					</Typography>
+				</DialogHeader>
+
+				<DialogContent>
+					{settings.construct(() => setSettingsVisible(false))}
+				</DialogContent>
+			</Dialog>
 
 			<Sheet
 				aria-label="Question selectors"

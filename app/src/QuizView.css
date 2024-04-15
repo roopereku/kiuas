@@ -1,3 +1,6 @@
-#editButtons {
-	margin: 10px;
+#elementContainer {
+	margin: 50px 50px;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
 }
