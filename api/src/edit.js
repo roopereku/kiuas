@@ -137,7 +137,31 @@ router.post("/question/newanswer/:editId/:questionId", ensureAccess, ensureValid
 router.post("/question/remove/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
 })
 
-router.post("/image/:editId/:questionId", ensureAccess, ensureValidQuestion, imageUpload.single("image"), (req, res) => {
+router.post("/image/remove/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
+	const question = editingContext[req.params.editId].questions[req.params.questionId]
+
+	// TODO: Once the images get reference counts, delete the actual image file when nobody uses it?
+	// This only makes sense when duplicate images aren't saved.
+
+	// If an answer index is specified, attach the image to an answer.
+	if("answerIndex" in req.body)
+	{
+		const index = parseInt(req.body.answerIndex)
+		if(index < question.answers.length)
+		{
+			question.answers[index].image = ""
+		}
+	}
+
+	else
+	{
+		question.image = ""
+	}
+
+	res.sendStatus(200)
+})
+
+router.post("/image/add/:editId/:questionId", ensureAccess, ensureValidQuestion, imageUpload.single("image"), (req, res) => {
 	// If the image was saved, save it to the given editing context.
 	if("resultImage" in req)
 	{
