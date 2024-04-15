@@ -9,7 +9,7 @@ import { AppBar } from "@react-md/app-bar";
 import { Typography } from "@react-md/typography";
 import { Dialog, DialogContent, DialogHeader } from "@react-md/dialog";
 
-import EditContext from "./EditContext.js"
+import QuizContext from "./QuizContext.js"
 import EditOnly from "./EditOnly.js"
 import QuizElement from "./QuizElement.js"
 import "./QuizView.css"
@@ -105,7 +105,11 @@ const QuizView = ({selected}) => {
 	}
 
 	return (
-		<EditContext.Provider value={selected.isEditing}>
+		<QuizContext.Provider value={{
+			getSelectedQuestion: () => questionIds[selectedIndex],
+			quizId: selected.id,
+			isEditing: selected.isEditing
+		}}>
 			<AppBar fixed>
 				<Button
 					themeType="contained"
@@ -301,7 +305,7 @@ const QuizView = ({selected}) => {
 					)
 				})}
 			</Sheet>
-		</EditContext.Provider>
+		</QuizContext.Provider>
 	)
 }
 

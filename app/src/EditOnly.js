@@ -1,10 +1,10 @@
 import { useContext } from "react"
-import EditContext from "./EditContext.js"
+import QuizContext from "./QuizContext.js"
 
 const EditOnly = ({children}) => {
-	const isEditing = useContext(EditContext)
+	const ctx = useContext(QuizContext)
 
-	return isEditing ? (
+	return ctx.isEditing ? (
 		<div>
 			{children}
 		</div>

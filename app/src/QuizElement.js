@@ -4,12 +4,12 @@ import { TextArea, FileInput } from "@react-md/form"
 import { ImageSVGIcon } from "@react-md/material-icons"
 import { Chip } from "@react-md/chip"
 
-import EditContext from "./EditContext.js"
+import QuizContext from "./QuizContext.js"
 import EditOnly from "./EditOnly.js"
 import "./QuizElement.css"
 
 const QuizElement = ({data, onEdit, setSettings, onImageUpload, setSettingsVisible}) => {
-	const isEditing = useContext(EditContext)
+	const ctx = useContext(QuizContext)
 	const [ textValue, setTextValue ] = useState("")
 	const [ imageValue, setImageValue ] = useState("")
 
@@ -37,7 +37,7 @@ const QuizElement = ({data, onEdit, setSettings, onImageUpload, setSettingsVisib
 					className="quizElementText"
 					resize="none"
 					value={textValue}
-					readOnly={!isEditing}
+					readOnly={!ctx.isEditing}
 					onChange={(e) => {
 						setTextValue(e.target.value)
 						onEdit(e.target.value)
