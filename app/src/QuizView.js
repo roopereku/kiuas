@@ -8,6 +8,7 @@ import { Overlay } from "@react-md/overlay";
 import { AppBar } from "@react-md/app-bar";
 import { Typography } from "@react-md/typography";
 import { Dialog, DialogContent, DialogHeader } from "@react-md/dialog";
+import { DropdownMenu, MenuItem } from "@react-md/menu";
 
 import QuizContext from "./QuizContext.js"
 import EditOnly from "./EditOnly.js"
@@ -21,6 +22,7 @@ import
 	ChevronRightSVGIcon,
 	AddCircleSVGIcon,
 	RemoveCircleSVGIcon,
+	EditSVGIcon
 }
 
 from "@react-md/material-icons"
@@ -110,7 +112,10 @@ const QuizView = ({selected}) => {
 			quizId: selected.id,
 			isEditing: selected.isEditing
 		}}>
-			<AppBar fixed>
+			<AppBar
+				id="quizBar"
+				fixed
+			>
 				<Button
 					themeType="contained"
 					theme="primary"
@@ -153,59 +158,58 @@ const QuizView = ({selected}) => {
 				</Button>
 
 				<EditOnly>
-					<Button
-						themeType="contained"
+					<DropdownMenu
+						id="quizEditMenu"
+						floating="top-right"
+						buttonChildren={<EditSVGIcon />}
 						theme="primary"
-						onClick={() => {
-							fetch("api/edit/question/remove", {
-								method: "POST",
-							})
-								.then((res) => res.json())
-								.then((json) =>  {
-									console.log("After remove", json)
+					>
+						<MenuItem
+							onClick={() => {
+								fetch("api/edit/question/add/" + selected.id, {
+									method: "POST",
 								})
-						}}
-					>
-						<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
-							Remove
-						</TextIconSpacing>
-					</Button>
+									.then((res) => res.json())
+									.then((json) =>  {
+										questionIds.push(json.id)
+										showQuestion(json.id)
+									})
+							}}
+						>
+							<TextIconSpacing icon={<AddCircleSVGIcon />}>
+								Add a question
+							</TextIconSpacing>
+						</MenuItem>
 
-					<Button
-						themeType="contained"
-						theme="primary"
-						onClick={() => {
-							fetch("api/edit/question/add/" + selected.id, {
-								method: "POST",
-							})
-								.then((res) => res.json())
-								.then((json) =>  {
-									questionIds.push(json.id)
-									showQuestion(json.id)
+						<MenuItem
+							onClick={() => {
+								fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
+									method: "POST",
 								})
-						}}
+									.then((_) => showQuestion(questionIds[selectedIndex]))
+							}}
+						>
+							<TextIconSpacing icon={<AddCircleSVGIcon />}>
+								Add an answer
+							</TextIconSpacing>
+						</MenuItem>
 
-					>
-						<TextIconSpacing icon={<AddCircleSVGIcon />}>
-							Add
-						</TextIconSpacing>
-					</Button>
-
-					<Button
-						themeType="contained"
-						theme="primary"
-						onClick={() => {
-							fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
-								method: "POST",
-							})
-								.then((_) => showQuestion(questionIds[selectedIndex]))
-						}}
-
-					>
-						<TextIconSpacing icon={<AddCircleSVGIcon />}>
-							New answer
-						</TextIconSpacing>
-					</Button>
+						<MenuItem
+							onClick={() => {
+								fetch("api/edit/question/remove", {
+									method: "POST",
+								})
+									.then((res) => res.json())
+									.then((json) =>  {
+										console.log("After remove", json)
+									})
+							}}
+						>
+							<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
+								Remove question
+							</TextIconSpacing>
+						</MenuItem>
+					</DropdownMenu>
 				</EditOnly>
 			</AppBar>
 

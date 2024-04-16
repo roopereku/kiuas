@@ -4,3 +4,12 @@
 	flex-wrap: wrap;
 	justify-content: center;
 }
+
+#quizBar {
+	display: flex;
+	justify-content: center;
+}
+
+#quizEditMenu {
+	margin-top: 50px;
+}
