@@ -4,11 +4,11 @@ import { Chip } from "@react-md/chip"
 import { Sheet } from "@react-md/sheet";
 import { TextIconSpacing } from "@react-md/icon"
 import { MediaContainer } from "@react-md/media"
-import { Overlay } from "@react-md/overlay";
-import { AppBar } from "@react-md/app-bar";
-import { Typography } from "@react-md/typography";
-import { Dialog, DialogContent, DialogHeader } from "@react-md/dialog";
-import { DropdownMenu, MenuItem } from "@react-md/menu";
+import { Overlay } from "@react-md/overlay"
+import { Typography } from "@react-md/typography"
+import { AppBar, AppBarAction, AppBarTitle } from "@react-md/app-bar"
+import { Dialog, DialogContent, DialogHeader } from "@react-md/dialog"
+import { DropdownMenu, MenuItem } from "@react-md/menu"
 
 import QuizContext from "./QuizContext.js"
 import EditOnly from "./EditOnly.js"
@@ -22,7 +22,9 @@ import
 	ChevronRightSVGIcon,
 	AddCircleSVGIcon,
 	RemoveCircleSVGIcon,
-	EditSVGIcon
+	SettingsSVGIcon,
+	EditSVGIcon,
+	HomeSVGIcon
 }
 
 from "@react-md/material-icons"
@@ -116,9 +118,17 @@ const QuizView = ({selected}) => {
 				id="quizBar"
 				fixed
 			>
-				<Button
-					themeType="contained"
-					theme="primary"
+				<AppBarAction
+					id="quizGoHome"
+					aria-label="Go to home"
+				>
+					<HomeSVGIcon />
+				</AppBarAction>
+
+				<AppBarAction
+					id="quizPrevQuestion"
+					className="quizNavButton"
+					aria-label="Previous question"
 					onClick={() => {
 						if(selectedIndex - 1 >= 0)
 						{
@@ -126,24 +136,18 @@ const QuizView = ({selected}) => {
 							setSelectedIndex(selectedIndex - 1)
 						}
 					}}
-
 				>
-					<TextIconSpacing icon={<ChevronLeftSVGIcon />}>
-					</TextIconSpacing>
-				</Button>
+					<ChevronLeftSVGIcon />
+				</AppBarAction>
 
-				<Button
-					themeType="contained"
-					theme="primary"
-					onClick={() => setSelectorsVisible(true)}
-				>
-					<TextIconSpacing icon={<TocSVGIcon />}>
-					</TextIconSpacing>
-				</Button>
+				<AppBarTitle id="quizTitle">
+					{selected.name}
+				</AppBarTitle>
 
-				<Button
-					themeType="contained"
-					theme="primary"
+				<AppBarAction
+					id="quizNextQuestion"
+					className="quizNavButton"
+					aria-label="Next question"
 					onClick={() => {
 						if(selectedIndex + 1 < questionIds.length)
 						{
@@ -151,67 +155,94 @@ const QuizView = ({selected}) => {
 							setSelectedIndex(selectedIndex + 1)
 						}
 					}}
-
 				>
-					<TextIconSpacing icon={<ChevronRightSVGIcon />}>
-					</TextIconSpacing>
-				</Button>
+					<ChevronRightSVGIcon />
+				</AppBarAction>
 
-				<EditOnly>
-					<DropdownMenu
-						id="quizEditMenu"
-						floating="top-right"
-						buttonChildren={<EditSVGIcon />}
-						theme="primary"
-					>
-						<MenuItem
-							onClick={() => {
-								fetch("api/edit/question/add/" + selected.id, {
-									method: "POST",
-								})
-									.then((res) => res.json())
-									.then((json) =>  {
-										questionIds.push(json.id)
-										showQuestion(json.id)
-									})
-							}}
-						>
-							<TextIconSpacing icon={<AddCircleSVGIcon />}>
-								Add a question
-							</TextIconSpacing>
-						</MenuItem>
+				<AppBarAction
+					id="quizConfigAction"
+					aria-label="Quiz settings"
+					onClick={() => {
+						setSettings({
+							title: "Quiz settings",
+							construct: (hideSettings) => {
+								return (
+									<p>TODO</p>
+								)
+							}
+						})
 
-						<MenuItem
-							onClick={() => {
-								fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
-									method: "POST",
-								})
-									.then((_) => showQuestion(questionIds[selectedIndex]))
-							}}
-						>
-							<TextIconSpacing icon={<AddCircleSVGIcon />}>
-								Add an answer
-							</TextIconSpacing>
-						</MenuItem>
-
-						<MenuItem
-							onClick={() => {
-								fetch("api/edit/question/remove", {
-									method: "POST",
-								})
-									.then((res) => res.json())
-									.then((json) =>  {
-										console.log("After remove", json)
-									})
-							}}
-						>
-							<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
-								Remove question
-							</TextIconSpacing>
-						</MenuItem>
-					</DropdownMenu>
-				</EditOnly>
+						setSettingsVisible(true)
+					}}
+				>
+					<SettingsSVGIcon />
+				</AppBarAction>
 			</AppBar>
+
+			<EditOnly>
+				<DropdownMenu
+					id="quizEditMenu"
+					floating="bottom-right"
+					buttonChildren={<EditSVGIcon />}
+					theme="primary"
+				>
+					<MenuItem
+						onClick={() => {
+							fetch("api/edit/question/add/" + selected.id, {
+								method: "POST",
+							})
+								.then((res) => res.json())
+								.then((json) =>  {
+									questionIds.push(json.id)
+									showQuestion(json.id)
+								})
+						}}
+					>
+						<TextIconSpacing icon={<AddCircleSVGIcon />}>
+							Add a question
+						</TextIconSpacing>
+					</MenuItem>
+
+					<MenuItem
+						onClick={() => {
+							fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
+								method: "POST",
+							})
+								.then((_) => showQuestion(questionIds[selectedIndex]))
+						}}
+					>
+						<TextIconSpacing icon={<AddCircleSVGIcon />}>
+							Add an answer
+						</TextIconSpacing>
+					</MenuItem>
+
+					<MenuItem
+						onClick={() => {
+							fetch("api/edit/question/remove", {
+								method: "POST",
+							})
+								.then((res) => res.json())
+								.then((json) =>  {
+									console.log("After remove", json)
+								})
+						}}
+					>
+						<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
+							Remove question
+						</TextIconSpacing>
+					</MenuItem>
+				</DropdownMenu>
+			</EditOnly>
+
+			<Button
+				themeType="contained"
+				floating="bottom-right"
+				theme="primary"
+				onClick={() => setSelectorsVisible(true)}
+			>
+				<TextIconSpacing icon={<TocSVGIcon />}>
+				</TextIconSpacing>
+			</Button>
 
 			{questionIds.length === 0 ? 
 				(
