@@ -237,9 +237,14 @@ router.get("/question/:editId/:questionId", ensureAccess, ensureValidQuestion, (
 	res.send(JSON.stringify(question))
 })
 
-router.get("/questionids/:editId", ensureAccess, (req, res) => {
-	// Send the result of Object.keys to the user. This is the same thing as an array if ids.
-	res.send(JSON.stringify(Object.keys(editingContext[req.params.editId].questions)))
+router.get("/quizdata/:editId", ensureAccess, (req, res) => {
+	const ctx = editingContext[req.params.editId]
+
+	res.send(JSON.stringify({
+		name: ctx.name,
+		category: ctx.category,
+		questions: Object.keys(ctx.questions)
+	}))
 })
 
 module.exports.router = router

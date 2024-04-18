@@ -67,9 +67,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 
 					setSelectedQuiz({
 						id: json.id,
-						name: "New quiz",
-						isEditing: true,
-						isNew: true
+						isEditing: true
 					})
 				})
 		}
@@ -185,7 +183,6 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							theme="primary"
 							onClick={() => setSelectedQuiz({
 								id: currentInfo.id,
-								name: currentInfo.name,
 								revision: revision,
 								isEditing: false
 							})}
@@ -200,7 +197,6 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							theme="primary"
 							onClick={() => setSelectedQuiz({
 								id: currentInfo.id,
-								name: currentInfo.name,
 								revision: revision,
 								isEditing: false
 							})}
@@ -242,7 +238,6 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							key={entry.id}
 							onClick={() => setSelectedQuiz({
 								id: entry.id,
-								name: entry.name,
 								isEditing: true
 							})}
 						>

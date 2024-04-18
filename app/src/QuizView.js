@@ -42,19 +42,21 @@ const QuizView = ({selected, goHome}) => {
 	const [settings, setSettings] = useState({ construct: () => {} })
 
 	useEffect(() => {
-		if(selected.isNew)
-		{
-			return
-		}
-
-		else if(selected.isEditing)
+		if(selected.isEditing)
 		{
 			console.log("Get edit from " + selected.id)
-			fetch("api/edit/questionids/" + selected.id)
+			fetch("api/edit/quizdata/" + selected.id)
 				.then((res) => res.json())
-				.then((ids) => {
-					setQuestionIds(ids)
-					showQuestion(ids[0])
+				.then((json) => {
+					console.log(json)
+					setQuizName(json.name)
+					setQuizCategory(json.category)
+
+					if(json.questions.length > 0)
+					{
+						setQuestionIds(json.questions)
+						showQuestion(json.questions[0])
+					}
 				})
 		}
 
