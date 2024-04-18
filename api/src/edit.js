@@ -103,6 +103,7 @@ router.post("/new", (req, res) => {
 
 	editingContext[id] = {
 		name: "New quiz",
+		category: "Default",
 		questions: {},
 		owner: login.getUsername(req)
 	}
@@ -112,7 +113,21 @@ router.post("/new", (req, res) => {
 	}))
 })
 
-router.post("/quiz/:editId", ensureAccess, (req, res) => {
+router.post("/quiz/location/:editId", ensureAccess, (req, res) => {
+	if("name" in req.body)
+	{
+		editingContext[req.params.editId].name = req.body.name
+	}
+
+	if("category" in req.body)
+	{
+		editingContext[req.params.editId].category = req.body.category
+	}
+
+	res.sendStatus(200)
+})
+
+router.post("/quiz/publish/:editId", ensureAccess, (req, res) => {
 })
 
 router.post("/question/add/:editId", ensureAccess, (req, res) => {

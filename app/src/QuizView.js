@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@react-md/button"
 import { Chip } from "@react-md/chip"
 import { Sheet } from "@react-md/sheet";
+import { TextField } from "@react-md/form"
 import { TextIconSpacing } from "@react-md/icon"
 import { MediaContainer } from "@react-md/media"
 import { Overlay } from "@react-md/overlay"
@@ -31,6 +32,7 @@ from "@react-md/material-icons"
 
 const QuizView = ({selected, goHome}) => {
 	const [quizName, setQuizName] = useState(selected.name)
+	const [quizCategory, setQuizCategory] = useState(selected.category)
 	const [questionIds, setQuestionIds] = useState([])
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const [selectorsVisible, setSelectorsVisible] = useState(false)
@@ -142,7 +144,7 @@ const QuizView = ({selected, goHome}) => {
 				</AppBarAction>
 
 				<AppBarTitle id="quizTitle">
-					{selected.name}
+					{quizName}
 				</AppBarTitle>
 
 				<AppBarAction
@@ -168,7 +170,45 @@ const QuizView = ({selected, goHome}) => {
 							title: "Quiz settings",
 							construct: (hideSettings) => {
 								return (
-									<p>TODO</p>
+									<div>
+										<TextField
+											defaultValue={quizName}
+											label="Quiz name"
+											onChange={(e) => {
+												setQuizName(e.target.value)
+												fetch("api/edit/quiz/location/" + selected.id, {
+													method: "POST",
+													headers: {
+														  'Accept': 'application/json',
+														  'Content-Type': 'application/json'
+													},
+													body: JSON.stringify({
+														name: e.target.value
+													})
+												})
+
+											}}
+										/>
+
+										<TextField
+											defaultValue={quizCategory}
+											label="Quiz category"
+											onChange={(e) => {
+												setQuizCategory(e.target.value)
+												fetch("api/edit/quiz/location/" + selected.id, {
+													method: "POST",
+													headers: {
+														  'Accept': 'application/json',
+														  'Content-Type': 'application/json'
+													},
+													body: JSON.stringify({
+														category: e.target.value
+													})
+												})
+											}}
+										/>
+
+									</div>
 								)
 							}
 						})
