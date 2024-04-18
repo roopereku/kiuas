@@ -29,7 +29,7 @@ import
 
 from "@react-md/material-icons"
 
-const QuizView = ({selected}) => {
+const QuizView = ({selected, goHome}) => {
 	const [quizName, setQuizName] = useState(selected.name)
 	const [questionIds, setQuestionIds] = useState([])
 	const [selectedIndex, setSelectedIndex] = useState(0)
@@ -121,6 +121,7 @@ const QuizView = ({selected}) => {
 				<AppBarAction
 					id="quizGoHome"
 					aria-label="Go to home"
+					onClick={() => goHome()}
 				>
 					<HomeSVGIcon />
 				</AppBarAction>

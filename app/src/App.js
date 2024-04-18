@@ -20,7 +20,12 @@ function App()
 					(<LoginChecker setLoginDone={setLoginDone} />) :
 					Object.keys(selectedQuiz).length === 0 ?
 						(<QuizSelector setSelectedQuiz={setSelectedQuiz} />) :
-						(<QuizView selected={selectedQuiz} />)
+						(
+							<QuizView
+								selected={selectedQuiz}
+								goHome={() => setSelectedQuiz({})}
+							/>
+						)
 				}
 			</header>
 		</div>
