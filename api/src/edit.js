@@ -128,6 +128,7 @@ router.post("/quiz/location/:editId", ensureAccess, (req, res) => {
 })
 
 router.post("/quiz/publish/:editId", ensureAccess, (req, res) => {
+	res.sendStatus(200)
 })
 
 router.post("/question/add/:editId", ensureAccess, (req, res) => {

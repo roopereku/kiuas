@@ -8,3 +8,13 @@
 #quizEditMenu {
 	margin-bottom: 60px;
 }
+
+#quizConfig {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+#quizConfig > * {
+	margin: 10px;
+}

@@ -19,6 +19,7 @@ import "./QuizView.css"
 import
 {
 	TocSVGIcon,
+	PublishSVGIcon,
 	ChevronLeftSVGIcon,
 	ChevronRightSVGIcon,
 	AddCircleSVGIcon,
@@ -172,7 +173,7 @@ const QuizView = ({selected, goHome}) => {
 							title: "Quiz settings",
 							construct: (hideSettings) => {
 								return (
-									<div>
+									<div id="quizConfig">
 										<TextField
 											defaultValue={quizName}
 											label="Quiz name"
@@ -210,6 +211,24 @@ const QuizView = ({selected, goHome}) => {
 											}}
 										/>
 
+										<Button
+											themeType="contained"
+											theme="primary"
+											onClick={() => {
+												fetch("api/edit/quiz/publish/" + selected.id, {
+													method: "POST"
+												})
+													.then((res) => {
+														// TODO: Check for error codes?
+														// TODO: Show a notification?
+														goHome()
+													})
+											}}
+										>
+											<TextIconSpacing icon={<PublishSVGIcon />}>
+												Publish
+											</TextIconSpacing>
+										</Button>
 									</div>
 								)
 							}
