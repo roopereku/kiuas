@@ -43,54 +43,50 @@ const QuizView = ({selected, goHome}) => {
 	const [settings, setSettings] = useState({ construct: () => {} })
 
 	useEffect(() => {
-		if(selected.isEditing)
-		{
-			console.log("Get edit from " + selected.id)
-			fetch("api/edit/quizdata/" + selected.id)
-				.then((res) => res.json())
-				.then((json) => {
-					console.log(json)
-					setQuizName(json.name)
-					setQuizCategory(json.category)
+		const path = selected.isEditing ? "api/edit/quizdata/" : "api/quiz/quizdata/"
+		fetch(path + selected.id)
+			.then((res) => res.json())
+			.then((json) => {
+				console.log(json)
+				setQuizName(json.name)
+				setQuizCategory(json.category)
 
-					if(json.questions.length > 0)
-					{
-						setQuestionIds(json.questions)
-						showQuestion(json.questions[0])
-					}
-				})
-		}
-
-		else
-		{
-			// TODO: Get revision from QuizSelector.
-			fetch("api/quiz/questionids/" + selected.id + "/XXXX")
-				.then((res) => res.json())
-				.then((ids) => {
-					setQuestionIds(ids)
-					showQuestion(ids[0])
-				})
-		}
+				if(json.questions.length > 0)
+				{
+					setQuestionIds(json.questions)
+					showQuestion(json.questions[0])
+				}
+			})
 	}, [])
 
 	const showQuestion = (id) => {
 		const updateData = (json) => {
-			console.log("Show", json)
-			setQuizElements([{
+			console.log("Got data", json)
+
+			let data = [{
 					type: "question",
 					initialValue: json.question,
 					image: json.image
 			}]
-			.concat(
-				json.answers.map((answer, answerIndex) => {
-					return {
-						type: "answer",
-						initialValue: answer.answer,
-						answerIndex: answerIndex,
-						image: answer.image
-					}
-				})
-			))
+
+			// Only if the user is editing a quiz, show the answers by default.
+			if(selected.isEditing)
+			{
+				data = data.concat(
+					json.answers.map((answer, answerIndex) => {
+						return {
+							type: "answer",
+							initialValue: answer.answer,
+							answerIndex: answerIndex,
+							image: answer.image
+						}
+					})
+				)
+			}
+
+			console.log("Question data is", data)
+
+			setQuizElements(data)
 		}
 
 		if(selected.isEditing)

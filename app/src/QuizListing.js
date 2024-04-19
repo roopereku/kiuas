@@ -1,15 +1,15 @@
 import { Button } from "@react-md/button";
 import "./QuizListing.css"
 
-const QuizListing = ({name, id, showListingInfo}) => {
+const QuizListing = ({data, showListingInfo}) => {
 	const displayInfo = () => {
-		showListingInfo(id, name)
+		showListingInfo(data.name, data.revisions)
 	}
 
 	return (
 		<div className="listingDiv">
 			<Button themeType="contained" onClick={displayInfo}>
-				{name}
+				{data.name}
 			</Button>
 		</div>
 	)

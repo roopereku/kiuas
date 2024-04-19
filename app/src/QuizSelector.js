@@ -25,16 +25,13 @@ const QuizSelector = ({setSelectedQuiz}) => {
 	const [revision, handleRevisionChange] = useSelectState("nii")
 	const [revisionOptions, setRevisionOptions] = useState([])
 
-	const showListingInfo = (id, name) => {
+	const showListingInfo = (name, revisions) => {
 		setCurrentInfo({
-			id: id,
 			name: name
 		})
 
-		// TODO: Get this from the backend.
-		setRevisionOptions([
-			"Rev1", "Rev2", "Rev3"
-		])
+		setRevisionOptions(revisions)
+		handleRevisionChange(revisions[0])
 
 		setInfoVisible(true)
 	}
@@ -108,6 +105,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 					newCategories[categoryLookup[listing.category]].children.push(listing)
 				})
 
+				console.log(newCategories)
 				setCategories(newCategories)
 				setExpanded(newExpanded)
 			})
@@ -148,8 +146,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							return (
 								<QuizListing
 									key={category.id + "-" + index}
-									name={listing.name}
-									id={listing.id}
+									data={listing}
 									showListingInfo={showListingInfo}
 								/>
 							)
@@ -182,8 +179,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							themeType="contained"
 							theme="primary"
 							onClick={() => setSelectedQuiz({
-								id: currentInfo.id,
-								revision: revision,
+								id: revision,
 								isEditing: false
 							})}
 						>
@@ -196,8 +192,7 @@ const QuizSelector = ({setSelectedQuiz}) => {
 							themeType="contained"
 							theme="primary"
 							onClick={() => setSelectedQuiz({
-								id: currentInfo.id,
-								revision: revision,
+								id: revision,
 								isEditing: false
 							})}
 						>

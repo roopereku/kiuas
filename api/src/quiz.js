@@ -56,14 +56,26 @@ router.get("/question/:questionId", (req, res) => {
 		return
 	}
 
-	res.send(JSON.stringify({
-		question: "Test question for " + req.params.questionId,
-		image: ""
-	}))
+	db.query("SELECT question, image FROM question WHERE id = $1", [ req.params.questionId ])
+		.then((rows) => {
+			console.log("Question is", rows)
+			if(rows.length > 0)
+			{
+				res.send(JSON.stringify({
+					question: rows[0].question,
+					image: rows[0].image
+				}))
+			}
+
+			else
+			{
+				res.send("{}")
+			}
+		})
 })
 
 // Returns the ID for question for every question within the given revision of a quiz.
-router.get("/questionids/:revisionId", (req, res) => {
+router.get("/quizdata/:revisionId", (req, res) => {
 	// If the user isn't logged in, send an empty JSON body.
 	if(!login.isValidSession(req))
 	{
@@ -71,31 +83,42 @@ router.get("/questionids/:revisionId", (req, res) => {
 		return
 	}
 
-	let questionIds = {}
-
-	// If question IDs were returned, operate on them.
-	if(questionIds.length > 0)
-	{
-		// First shuffle the questions if necessary.
-		if("shuffle" in req.query)
-		{
-			questionIds = questionIds
-				.map(id => ({ id , sort: Math.random() }))
-				.sort((a, b) => a.sort - b.sort)
-				.map(({ id }) => id)
-		}
-
-		// If a max question amount is given, cut the ID array.
-		if("max" in req.query)
-		{
-			if(questionIds.length >= req.query.max)
+	// Get IDs of questions for the given revision if the requester has access to them.
+	db.query("SELECT questions, quizId FROM revision WHERE id = $1 AND $2 = ANY(authorized)",
+			[ req.params.revisionId, login.getUsername(req) ])
+		.then((rows) => {
+			if(rows.length > 0)
 			{
-				questionIds = questionIds.slice(0, req.query.max)
-			}
-		}
-	}
+				const questionIds = rows[0].questions
+					.map(id => ({ id , sort: Math.random() }))
+					.sort((a, b) => a.sort - b.sort)
+					.map(({ id }) => id)
 
-	res.send(JSON.stringify(questionIds))
+				// If a max question amount is given, cut the ID array.
+				if("max" in req.query)
+				{
+					if(questionIds.length >= req.query.max)
+					{
+						questionIds = questionIds.slice(0, req.query.max)
+					}
+				}
+
+				// Get the name of the quiz.
+				db.query("SELECT name, category FROM quiz WHERE id = $1", [ rows[0].quizid ])
+					.then((rows) => {
+						res.send(JSON.stringify({
+							name: rows[0].name,
+							category: rows[0].category,
+							questions: questionIds
+						}))
+					})
+			}
+
+			else
+			{
+				res.send("{}")
+			}
+		})
 })
 
 module.exports.router = router

@@ -143,7 +143,7 @@ router.post("/quiz/publish/:editId", ensureAccess, (req, res) => {
 					})
 
 					db.query("INSERT INTO question (id, question, image, answers) VALUES ($1, $2, $3, $4)",
-							[ key, ctx.name, ctx.category, answerIds ])
+							[ key, value.question, value.image, answerIds ])
 				}
 
 				db.query("INSERT INTO revision (id, quizId, authorized, questions) VALUES ($1, $2, $3, $4)",
