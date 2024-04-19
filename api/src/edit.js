@@ -5,6 +5,7 @@ const bodyParser = require("body-parser")
 const cookieParser = require("cookie-parser")
 
 const login = require("./login.js")
+const db = require("./database.js")
 
 const router = express.Router()
 router.use(bodyParser.json())
@@ -105,12 +106,52 @@ router.post("/new", (req, res) => {
 		name: "New quiz",
 		category: "Default",
 		questions: {},
-		owner: login.getUsername(req)
+		owner: login.getUsername(req),
+		base: ""
 	}
 
 	res.send(JSON.stringify({
 		id: id
 	}))
+})
+
+router.post("/quiz/publish/:editId", ensureAccess, (req, res) => {
+	const ctx = editingContext[req.params.editId]
+	delete editingContext[req.params.editId]
+	console.log(ctx)
+
+	// If there's no base for the editing context, it's a newly made quiz.
+	if(ctx.base === "")
+	{
+		const quizId = crypto.randomUUID()
+
+		db.query("INSERT INTO quiz (id, name, category) VALUES ($1, $2, $3)",
+				[ quizId, ctx.name, ctx.category ])
+			.then(() => {
+				// Add questions of the given quiz to the database.
+				for (const [key, value] of Object.entries(ctx.questions))
+				{
+					const answerIds = []
+
+					// Add answers of the given question to the database.
+					value.answers.forEach((answer) => {
+						const answerId = crypto.randomUUID()
+						db.query("INSERT INTO answer (id, answer, image) VALUES ($1, $2, $3)",
+								[ answerId, answer.answer, answer.image ])
+
+						answerIds.push(answerId)
+					})
+
+					db.query("INSERT INTO question (id, question, image, answers) VALUES ($1, $2, $3, $4)",
+							[ key, ctx.name, ctx.category, answerIds ])
+				}
+
+				db.query("INSERT INTO revision (id, quizId, authorized, questions) VALUES ($1, $2, $3, $4)",
+						[ crypto.randomUUID(), quizId, [ ctx.owner ], Object.keys(ctx.questions) ])
+			})
+	}
+
+	res.sendStatus(200)
 })
 
 router.post("/quiz/location/:editId", ensureAccess, (req, res) => {
@@ -124,10 +165,6 @@ router.post("/quiz/location/:editId", ensureAccess, (req, res) => {
 		editingContext[req.params.editId].category = req.body.category
 	}
 
-	res.sendStatus(200)
-})
-
-router.post("/quiz/publish/:editId", ensureAccess, (req, res) => {
 	res.sendStatus(200)
 })
 

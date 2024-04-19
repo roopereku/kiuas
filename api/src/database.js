@@ -43,8 +43,16 @@ client.connect((err) => {
 	client.query(`CREATE TABLE IF NOT EXISTS question (
 		id TEXT PRIMARY KEY,
 		question TEXT NOT NULL,
-		questions TEXT []
+		image TEXT NOT NULL,
+		answers TEXT []
 	);`)
+
+	client.query(`CREATE TABLE IF NOT EXISTS answer (
+		id TEXT PRIMARY KEY,
+		answer TEXT NOT NULL,
+		image TEXT NOT NULL
+	);`)
+
 
 	client.query(`CREATE TABLE IF NOT EXISTS credential (
 		name TEXT PRIMARY KEY,

@@ -144,10 +144,10 @@ const QuizSelector = ({setSelectedQuiz}) => {
 								}))
 							}}
 						>
-						{category.children.map((listing) => {
+						{category.children.map((listing, index) => {
 							return (
 								<QuizListing
-									key={listing.id}
+									key={category.id + "-" + index}
 									name={listing.name}
 									id={listing.id}
 									showListingInfo={showListingInfo}
