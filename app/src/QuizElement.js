@@ -62,81 +62,81 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 					}}
 				/>
 
-				<Chip
-					leftIcon={<ImageSVGIcon />}
-					onClick={() => {
-						setSettings({
-							title: "Image settings",
-							construct: (hideSettings) => {
-								return (
-									<div>
-										<FileInput
-											id="quizImageInput"
-											accept="image/*"
-											onChange={(e) => {
-												const body = new FormData()
-												body.append("image", e.target.files[0])
+				<EditOnly>
+					<Chip
+						leftIcon={<ImageSVGIcon />}
+						onClick={() => {
+							setSettings({
+								title: "Image settings",
+								construct: (hideSettings) => {
+									return (
+										<div>
+											<FileInput
+												id="quizImageInput"
+												accept="image/*"
+												onChange={(e) => {
+													const body = new FormData()
+													body.append("image", e.target.files[0])
 
-												if(data.type === "answer")
-												{
-													body.append("answerIndex", data.answerIndex)
-												}
+													if(data.type === "answer")
+													{
+														body.append("answerIndex", data.answerIndex)
+													}
 
-												fetch("api/edit/image/add/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
-													method: "POST",
-													body: body
-												})
-													.then((res) => res.text())
-													.then((id) => {
-														setImageValue(id)
-														hideSettings()
+													fetch("api/edit/image/add/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
+														method: "POST",
+														body: body
 													})
-											}}
-											multiple={false}
-										>
-											Upload an image
-										</FileInput>
+														.then((res) => res.text())
+														.then((id) => {
+															setImageValue(id)
+															hideSettings()
+														})
+												}}
+												multiple={false}
+											>
+												Upload an image
+											</FileInput>
 
-										<Button
-											themeType="contained"
-											theme="primary"
-											onClick={() => {
-												const body = {}
-												if(data.type === "answer")
-												{
-													body["answerIndex"] = data.answerIndex
-												}
+											<Button
+												themeType="contained"
+												theme="primary"
+												onClick={() => {
+													const body = {}
+													if(data.type === "answer")
+													{
+														body["answerIndex"] = data.answerIndex
+													}
 
-												fetch("api/edit/image/remove/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
-													method: "POST",
-													headers: {
-														  'Accept': 'application/json',
-														  'Content-Type': 'application/json'
-													},
-													body: JSON.stringify(body)
-												})
-													.then((res) => {
-														setImageValue("")
-														hideSettings()
+													fetch("api/edit/image/remove/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
+														method: "POST",
+														headers: {
+															  'Accept': 'application/json',
+															  'Content-Type': 'application/json'
+														},
+														body: JSON.stringify(body)
 													})
-											}}
-										>
-											<TextIconSpacing icon={<RemoveCircleOutlineSVGIcon />}>
-												Remove image
-											</TextIconSpacing>
-										</Button>
-									</div>
-								)
-							}
-						})
+														.then((res) => {
+															setImageValue("")
+															hideSettings()
+														})
+												}}
+											>
+												<TextIconSpacing icon={<RemoveCircleOutlineSVGIcon />}>
+													Remove image
+												</TextIconSpacing>
+											</Button>
+										</div>
+									)
+								}
+							})
 
-						setSettingsVisible(true)
-					}}
-				>
-					Image	
-				</Chip>
-				
-				
+							setSettingsVisible(true)
+						}}
+					>
+						Image	
+					</Chip>
+				</EditOnly>				
 			</MediaOverlay>
 
 			
