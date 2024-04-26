@@ -15,8 +15,28 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 	const [ textValue, setTextValue ] = useState("")
 	const [ imageValue, setImageValue ] = useState("")
 
+	const getTextStyling = () => {
+		// Hide outlines and hover animations for questions
+		// when outside editing mode.
+		if(!ctx.isEditing && data.type === "question")
+		{
+			return "unstyled"
+		}
+
+		return "outline"
+	}
+
+	const isReadOnly = () => {
+		if(ctx.isEditing || data.type === "answer")
+		{
+			return false
+		}
+
+		return true
+	}
+
 	useEffect(() => {
-		setTextValue(data.initialValue)
+		setTextValue(data.value)
 		setImageValue(data.image)
 	}, [data])
 
@@ -37,9 +57,10 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 			>
 				<TextArea
 					className="quizElementText"
+					theme={getTextStyling()}
 					resize="none"
 					value={textValue}
-					readOnly={!ctx.isEditing}
+					readOnly={isReadOnly()}
 					onChange={(e) => {
 						setTextValue(e.target.value)
 

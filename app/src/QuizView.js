@@ -13,6 +13,7 @@ import { DropdownMenu, MenuItem } from "@react-md/menu"
 
 import QuizContext from "./QuizContext.js"
 import EditOnly from "./EditOnly.js"
+import PlayOnly from "./PlayOnly.js"
 import QuizElement from "./QuizElement.js"
 import "./QuizView.css"
 
@@ -63,30 +64,34 @@ const QuizView = ({selected, goHome}) => {
 		const updateData = (json) => {
 			console.log("Got data", json)
 
-			let data = [{
-					type: "question",
-					initialValue: json.question,
-					image: json.image
-			}]
-
 			// Only if the user is editing a quiz, show the answers by default.
+			// TODO: Backend should send complete elements.
 			if(selected.isEditing)
 			{
+				let data = [{
+						type: "question",
+						value: json.question,
+						image: json.image
+				}]
+
 				data = data.concat(
 					json.answers.map((answer, answerIndex) => {
 						return {
 							type: "answer",
-							initialValue: answer.answer,
+							value: answer.answer,
 							answerIndex: answerIndex,
 							image: answer.image
 						}
 					})
 				)
+
+				setQuizElements(data)
 			}
 
-			console.log("Question data is", data)
-
-			setQuizElements(data)
+			else
+			{
+				setQuizElements(json)
+			}
 		}
 
 		if(selected.isEditing)
@@ -307,17 +312,29 @@ const QuizView = ({selected, goHome}) => {
 					<p>Nothing to show</p>
 				) :
 				(
-					<div id="elementContainer">
-						{
-							quizElements.map((e, index) => (
-								<QuizElement
-									key={"quizElement" + index}
-									data={e}
-									setSettings={setSettings}
-									setSettingsVisible={setSettingsVisible}
-								/>
-							))
-						}
+					<div>
+						<div id="elementContainer">
+							{
+								quizElements.map((e, index) => (
+									<QuizElement
+										key={"quizElement" + index}
+										data={e}
+										setSettings={setSettings}
+										setSettingsVisible={setSettingsVisible}
+									/>
+								))
+							}
+						</div>
+
+						<PlayOnly>
+							<Button
+								themeType="contained"
+								theme="primary"
+								onClick={() => {}}
+							>
+								Submit
+							</Button>
+						</PlayOnly>
 					</div>
 				)
 			}

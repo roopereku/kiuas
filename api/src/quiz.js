@@ -58,13 +58,25 @@ router.get("/question/:questionId", (req, res) => {
 
 	db.query("SELECT question, image FROM question WHERE id = $1", [ req.params.questionId ])
 		.then((rows) => {
-			console.log("Question is", rows)
 			if(rows.length > 0)
 			{
-				res.send(JSON.stringify({
-					question: rows[0].question,
-					image: rows[0].image
-				}))
+				// Construct a result containing the question and a text answer field.
+				// TODO: Implement other gamemodes such as multiple selection.
+				const result = [
+					{
+						type: "question",
+						value: rows[0].question,
+						image: rows[0].image
+					},
+
+					{
+						type: "answer",
+						value: "",
+						image: ""
+					}
+				]
+
+				res.send(JSON.stringify(result))
 			}
 
 			else
