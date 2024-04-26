@@ -33,341 +33,281 @@ import
 from "@react-md/material-icons"
 
 const QuizView = ({selected, goHome}) => {
-	const [quizName, setQuizName] = useState(selected.name)
-	const [quizCategory, setQuizCategory] = useState(selected.category)
-	const [questionIds, setQuestionIds] = useState([])
-	const [selectedIndex, setSelectedIndex] = useState(0)
-	const [selectorsVisible, setSelectorsVisible] = useState(false)
+const [quizName, setQuizName] = useState(selected.name)
+const [quizCategory, setQuizCategory] = useState(selected.category)
+const [selectedIndex, setSelectedIndex] = useState(0)
+const [selectorsVisible, setSelectorsVisible] = useState(false)
 
-	const [quizElements, setQuizElements] = useState([])
-	const [settingsVisible, setSettingsVisible] = useState(false)
-	const [settings, setSettings] = useState({ construct: () => {} })
+const [quizElements, setQuizElements] = useState([])
 
-	useEffect(() => {
-		const path = selected.isEditing ? "api/edit/quizdata/" : "api/quiz/quizdata/"
-		fetch(path + selected.id)
-			.then((res) => res.json())
-			.then((json) => {
-				console.log(json)
-				setQuizName(json.name)
-				setQuizCategory(json.category)
+const [settingsVisible, setSettingsVisible] = useState(false)
+const [settings, setSettings] = useState({ construct: () => {} })
 
-				if(json.questions.length > 0)
-				{
-					setQuestionIds(json.questions)
-					showQuestion(json.questions[0])
-				}
-			})
-	}, [])
+useEffect(() => {
+	const path = selected.isEditing ? "api/edit/quizinfo/" : "api/quiz/quizinfo/"
+	fetch(path + selected.id)
+		.then((res) => res.json())
+		.then((json) => {
+			console.log(json)
+			setQuizName(json.name)
+			setQuizCategory(json.category)
+		})
 
-	const showQuestion = (id) => {
-		const updateData = (json) => {
-			console.log("Got data", json)
+	updateElements()
+}, [])
 
-			// Only if the user is editing a quiz, show the answers by default.
-			// TODO: Backend should send complete elements.
-			if(selected.isEditing)
-			{
-				let data = [{
-						type: "question",
-						value: json.question,
-						image: json.image
-				}]
+const updateElements = () => {
+	const path = selected.isEditing ? "api/edit/quizdata/" : "api/quiz/quizdata/"
+	fetch(path + selected.id)
+		.then((res) => res.json())
+		.then((data) => {
+			console.log("Got data", data)
+			setQuizElements(data)
+		})
+}
 
-				data = data.concat(
-					json.answers.map((answer, answerIndex) => {
-						return {
-							type: "answer",
-							value: answer.answer,
-							answerIndex: answerIndex,
-							image: answer.image
+return (
+	<QuizContext.Provider value={{
+		getSelectedQuestion: () => quizElements[selectedIndex].id,
+		quizId: selected.id,
+		isEditing: selected.isEditing
+	}}>
+		<AppBar
+			id="quizBar"
+			fixed
+		>
+			<AppBarAction
+				id="quizGoHome"
+				aria-label="Go to home"
+				onClick={() => goHome()}
+			>
+				<HomeSVGIcon />
+			</AppBarAction>
+
+			<AppBarAction
+				id="quizPrevQuestion"
+				className="quizNavButton"
+				aria-label="Previous question"
+				onClick={() => {
+					if(selectedIndex - 1 >= 0)
+					{
+						setSelectedIndex(selectedIndex - 1)
+					}
+				}}
+			>
+				<ChevronLeftSVGIcon />
+			</AppBarAction>
+
+			<AppBarTitle id="quizTitle">
+				{quizName}
+			</AppBarTitle>
+
+			<AppBarAction
+				id="quizNextQuestion"
+				className="quizNavButton"
+				aria-label="Next question"
+				onClick={() => {
+					if(selectedIndex + 1 < quizElements.length)
+					{
+						setSelectedIndex(selectedIndex + 1)
+					}
+				}}
+			>
+				<ChevronRightSVGIcon />
+			</AppBarAction>
+
+			<AppBarAction
+				id="quizConfigAction"
+				aria-label="Quiz settings"
+				onClick={() => {
+					setSettings({
+						title: "Quiz settings",
+						construct: (hideSettings) => {
+							return (
+								<div id="quizConfig">
+									<TextField
+										defaultValue={quizName}
+										label="Quiz name"
+										onChange={(e) => {
+											setQuizName(e.target.value)
+											fetch("api/edit/quiz/location/" + selected.id, {
+												method: "POST",
+												headers: {
+													  'Accept': 'application/json',
+													  'Content-Type': 'application/json'
+												},
+												body: JSON.stringify({
+													name: e.target.value
+												})
+											})
+
+										}}
+									/>
+
+									<TextField
+										defaultValue={quizCategory}
+										label="Quiz category"
+										onChange={(e) => {
+											setQuizCategory(e.target.value)
+											fetch("api/edit/quiz/location/" + selected.id, {
+												method: "POST",
+												headers: {
+													  'Accept': 'application/json',
+													  'Content-Type': 'application/json'
+												},
+												body: JSON.stringify({
+													category: e.target.value
+												})
+											})
+										}}
+									/>
+
+									<Button
+										themeType="contained"
+										theme="primary"
+										onClick={() => {
+											fetch("api/edit/quiz/publish/" + selected.id, {
+												method: "POST"
+											})
+												.then((res) => {
+													// TODO: Check for error codes?
+													// TODO: Show a notification?
+													goHome()
+												})
+										}}
+									>
+										<TextIconSpacing icon={<PublishSVGIcon />}>
+											Publish
+										</TextIconSpacing>
+									</Button>
+								</div>
+							)
 						}
 					})
-				)
 
-				setQuizElements(data)
-			}
-
-			else
-			{
-				setQuizElements(json)
-			}
-		}
-
-		if(selected.isEditing)
-		{
-			// Get question data from the given editing context.
-			fetch("api/edit/question/" + selected.id + "/" + id)
-				.then((res) => res.json())
-				.then((json) => {
-					updateData(json)		
-				})
-		}
-
-		else
-		{
-			fetch("api/quiz/question/" + id)
-				.then((res) => res.json())
-				.then((json) => {
-					updateData(json)		
-				})
-		}
-	}
-
-	return (
-		<QuizContext.Provider value={{
-			getSelectedQuestion: () => questionIds[selectedIndex],
-			quizId: selected.id,
-			isEditing: selected.isEditing
-		}}>
-			<AppBar
-				id="quizBar"
-				fixed
+					setSettingsVisible(true)
+				}}
 			>
-				<AppBarAction
-					id="quizGoHome"
-					aria-label="Go to home"
-					onClick={() => goHome()}
-				>
-					<HomeSVGIcon />
-				</AppBarAction>
+				<SettingsSVGIcon />
+			</AppBarAction>
+		</AppBar>
 
-				<AppBarAction
-					id="quizPrevQuestion"
-					className="quizNavButton"
-					aria-label="Previous question"
+		<EditOnly>
+			<DropdownMenu
+				id="quizEditMenu"
+				floating="bottom-right"
+				buttonChildren={<EditSVGIcon />}
+				theme="primary"
+			>
+				<MenuItem
 					onClick={() => {
-						if(selectedIndex - 1 >= 0)
-						{
-							showQuestion(questionIds[selectedIndex - 1])
-							setSelectedIndex(selectedIndex - 1)
-						}
-					}}
-				>
-					<ChevronLeftSVGIcon />
-				</AppBarAction>
-
-				<AppBarTitle id="quizTitle">
-					{quizName}
-				</AppBarTitle>
-
-				<AppBarAction
-					id="quizNextQuestion"
-					className="quizNavButton"
-					aria-label="Next question"
-					onClick={() => {
-						if(selectedIndex + 1 < questionIds.length)
-						{
-							showQuestion(questionIds[selectedIndex + 1])
-							setSelectedIndex(selectedIndex + 1)
-						}
-					}}
-				>
-					<ChevronRightSVGIcon />
-				</AppBarAction>
-
-				<AppBarAction
-					id="quizConfigAction"
-					aria-label="Quiz settings"
-					onClick={() => {
-						setSettings({
-							title: "Quiz settings",
-							construct: (hideSettings) => {
-								return (
-									<div id="quizConfig">
-										<TextField
-											defaultValue={quizName}
-											label="Quiz name"
-											onChange={(e) => {
-												setQuizName(e.target.value)
-												fetch("api/edit/quiz/location/" + selected.id, {
-													method: "POST",
-													headers: {
-														  'Accept': 'application/json',
-														  'Content-Type': 'application/json'
-													},
-													body: JSON.stringify({
-														name: e.target.value
-													})
-												})
-
-											}}
-										/>
-
-										<TextField
-											defaultValue={quizCategory}
-											label="Quiz category"
-											onChange={(e) => {
-												setQuizCategory(e.target.value)
-												fetch("api/edit/quiz/location/" + selected.id, {
-													method: "POST",
-													headers: {
-														  'Accept': 'application/json',
-														  'Content-Type': 'application/json'
-													},
-													body: JSON.stringify({
-														category: e.target.value
-													})
-												})
-											}}
-										/>
-
-										<Button
-											themeType="contained"
-											theme="primary"
-											onClick={() => {
-												fetch("api/edit/quiz/publish/" + selected.id, {
-													method: "POST"
-												})
-													.then((res) => {
-														// TODO: Check for error codes?
-														// TODO: Show a notification?
-														goHome()
-													})
-											}}
-										>
-											<TextIconSpacing icon={<PublishSVGIcon />}>
-												Publish
-											</TextIconSpacing>
-										</Button>
-									</div>
-								)
-							}
+						fetch("api/edit/question/add/" + selected.id, {
+							method: "POST",
 						})
-
-						setSettingsVisible(true)
+							.then((res) => res.json())
+							.then((json) =>  {
+								updateElements()
+							})
 					}}
 				>
-					<SettingsSVGIcon />
-				</AppBarAction>
-			</AppBar>
+					<TextIconSpacing icon={<AddCircleSVGIcon />}>
+						Add a question
+					</TextIconSpacing>
+				</MenuItem>
 
-			<EditOnly>
-				<DropdownMenu
-					id="quizEditMenu"
-					floating="bottom-right"
-					buttonChildren={<EditSVGIcon />}
-					theme="primary"
+				<MenuItem
+					onClick={() => {
+						fetch("api/edit/question/newanswer/" + selected.id + "/" + quizElements[selectedIndex].id, {
+							method: "POST",
+						})
+							.then((_) => updateElements())
+					}}
 				>
-					<MenuItem
-						onClick={() => {
-							fetch("api/edit/question/add/" + selected.id, {
-								method: "POST",
-							})
-								.then((res) => res.json())
-								.then((json) =>  {
-									questionIds.push(json.id)
-									showQuestion(json.id)
-								})
-						}}
-					>
-						<TextIconSpacing icon={<AddCircleSVGIcon />}>
-							Add a question
-						</TextIconSpacing>
-					</MenuItem>
+					<TextIconSpacing icon={<AddCircleSVGIcon />}>
+						Add an answer
+					</TextIconSpacing>
+				</MenuItem>
 
-					<MenuItem
-						onClick={() => {
-							fetch("api/edit/question/newanswer/" + selected.id + "/" + questionIds[selectedIndex], {
-								method: "POST",
+				<MenuItem
+					onClick={() => {
+						fetch("api/edit/question/remove", {
+							method: "POST",
+						})
+							.then((res) => res.json())
+							.then((json) =>  {
+								console.log("After remove", json)
 							})
-								.then((_) => showQuestion(questionIds[selectedIndex]))
-						}}
-					>
-						<TextIconSpacing icon={<AddCircleSVGIcon />}>
-							Add an answer
-						</TextIconSpacing>
-					</MenuItem>
+					}}
+				>
+					<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
+						Remove question
+					</TextIconSpacing>
+				</MenuItem>
+			</DropdownMenu>
+		</EditOnly>
 
-					<MenuItem
-						onClick={() => {
-							fetch("api/edit/question/remove", {
-								method: "POST",
-							})
-								.then((res) => res.json())
-								.then((json) =>  {
-									console.log("After remove", json)
-								})
-						}}
-					>
-						<TextIconSpacing icon={<RemoveCircleSVGIcon />}>
-							Remove question
-						</TextIconSpacing>
-					</MenuItem>
-				</DropdownMenu>
-			</EditOnly>
+		<Button
+			themeType="contained"
+			floating="bottom-right"
+			theme="primary"
+			onClick={() => setSelectorsVisible(true)}
+		>
+			<TextIconSpacing icon={<TocSVGIcon />}>
+			</TextIconSpacing>
+		</Button>
 
+		<div id="elementContainer">
+			{quizElements.length > 0 &&
+				quizElements[selectedIndex].elements.map((e, index) =>
+				(
+					<QuizElement
+						key={"quizElement" + index}
+						data={e}
+						setSettings={setSettings}
+						setSettingsVisible={setSettingsVisible}
+					/>
+				))
+			}
+		</div>
+
+		<PlayOnly>
 			<Button
 				themeType="contained"
-				floating="bottom-right"
 				theme="primary"
-				onClick={() => setSelectorsVisible(true)}
+				onClick={() => {}}
 			>
-				<TextIconSpacing icon={<TocSVGIcon />}>
-				</TextIconSpacing>
+				Submit
 			</Button>
+		</PlayOnly>
 
-			{questionIds.length === 0 ? 
-				(
-					<p>Nothing to show</p>
-				) :
-				(
-					<div>
-						<div id="elementContainer">
-							{
-								quizElements.map((e, index) => (
-									<QuizElement
-										key={"quizElement" + index}
-										data={e}
-										setSettings={setSettings}
-										setSettingsVisible={setSettingsVisible}
-									/>
-								))
-							}
-						</div>
+		<Dialog
+			role="alertdialog"
+			modal={false}
+			visible={settingsVisible}
+			onRequestClose={() => setSettingsVisible(false)}
+		>
+			<DialogHeader>
+				<Typography type="headline-4">
+					{settings.title}
+				</Typography>
+			</DialogHeader>
 
-						<PlayOnly>
-							<Button
-								themeType="contained"
-								theme="primary"
-								onClick={() => {}}
-							>
-								Submit
-							</Button>
-						</PlayOnly>
-					</div>
-				)
-			}
+			<DialogContent>
+				{settings.construct(() => setSettingsVisible(false))}
+			</DialogContent>
+		</Dialog>
 
-			<Dialog
-				role="alertdialog"
-				modal={false}
-				visible={settingsVisible}
-				onRequestClose={() => setSettingsVisible(false)}
-			>
-				<DialogHeader>
-					<Typography type="headline-4">
-						{settings.title}
-					</Typography>
-				</DialogHeader>
-
-				<DialogContent>
-					{settings.construct(() => setSettingsVisible(false))}
-				</DialogContent>
-			</Dialog>
-
-			<Sheet
-				aria-label="Question selectors"
-				visible={selectorsVisible}
-				onRequestClose={() => setSelectorsVisible(false)}
-				position="bottom"
-			>
-				{questionIds.map((_, index) => {
+		<Sheet
+			aria-label="Question selectors"
+			visible={selectorsVisible}
+			onRequestClose={() => setSelectorsVisible(false)}
+			position="bottom"
+		>
+			{quizElements.map((_, index) => {
 					return (
 						<Chip
 							key={"Selector" + index.toString()}
 							onClick={() => {
-								showQuestion(questionIds[index])
 								setSelectedIndex(index)
 							}}
 							selected={index === selectedIndex}

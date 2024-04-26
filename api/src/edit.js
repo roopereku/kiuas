@@ -62,8 +62,9 @@ const ensureValidQuestion = (req, res, next) => {
 }
 
 const addNewAnswer = (editId, questionId) => {
-	editingContext[editId].questions[questionId].answers.push({
-		answer: "Default answer",
+	editingContext[editId].questions[questionId].elements.push({
+		type: "answer",
+		value: "Default answer",
 		image: ""
 	})
 }
@@ -131,19 +132,19 @@ router.post("/quiz/publish/:editId", ensureAccess, (req, res) => {
 				// Add questions of the given quiz to the database.
 				for (const [key, value] of Object.entries(ctx.questions))
 				{
-					const answerIds = []
+					const elementIds = []
 
-					// Add answers of the given question to the database.
-					value.answers.forEach((answer) => {
-						const answerId = crypto.randomUUID()
-						db.query("INSERT INTO answer (id, answer, image) VALUES ($1, $2, $3)",
-								[ answerId, answer.answer, answer.image ])
+					// Add the elements of the given question to the database.
+					value.elements.forEach((e) => {
+						const elementId = crypto.randomUUID()
+						db.query("INSERT INTO element (id, type, value, image) VALUES ($1, $2, $3, $4)",
+								[ elementId, e.type, e.value, e.image ])
 
-						answerIds.push(answerId)
+						elementIds.push(elementId)
 					})
 
-					db.query("INSERT INTO question (id, question, image, answers) VALUES ($1, $2, $3, $4)",
-							[ key, value.question, value.image, answerIds ])
+					db.query("INSERT INTO question (id, elements) VALUES ($1, $2)",
+							[ key, elementIds ])
 				}
 
 				db.query("INSERT INTO revision (id, quizId, authorized, questions) VALUES ($1, $2, $3, $4)",
@@ -172,12 +173,15 @@ router.post("/question/add/:editId", ensureAccess, (req, res) => {
 	id = crypto.randomUUID()
 
 	const newQuestion = {
-		question: "New question",
-		image: "",
-		answers: []
+		type: "question",
+		value: "New question",
+		image: ""
 	}
 
-	editingContext[req.params.editId].questions[id] = newQuestion
+	editingContext[req.params.editId].questions[id] = {
+		elements: [ newQuestion ]
+	}
+
 	addNewAnswer(req.params.editId, id)
 	res.send(JSON.stringify({id: id}))
 })
@@ -191,24 +195,15 @@ router.post("/question/remove/:editId/:questionId", ensureAccess, ensureValidQue
 })
 
 router.post("/image/remove/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
-	const question = editingContext[req.params.editId].questions[req.params.questionId]
+	const elements = editingContext[req.params.editId].questions[req.params.questionId].elements
 
 	// TODO: Once the images get reference counts, delete the actual image file when nobody uses it?
 	// This only makes sense when duplicate images aren't saved.
 
-	// If an answer index is specified, attach the image to an answer.
-	if("answerIndex" in req.body)
+	const index = parseInt(req.body.index)
+	if(index < elements.length)
 	{
-		const index = parseInt(req.body.answerIndex)
-		if(index < question.answers.length)
-		{
-			question.answers[index].image = ""
-		}
-	}
-
-	else
-	{
-		question.image = ""
+		elements[index].image = ""
 	}
 
 	res.sendStatus(200)
@@ -218,25 +213,20 @@ router.post("/image/add/:editId/:questionId", ensureAccess, ensureValidQuestion,
 	// If the image was saved, save it to the given editing context.
 	if("resultImage" in req)
 	{
-		const question = editingContext[req.params.editId].questions[req.params.questionId]
+		const elements = editingContext[req.params.editId].questions[req.params.questionId].elements
 
-		// If an answer index is specified, attach the image to an answer.
-		if("answerIndex" in req.body)
+		// TODO: Delete the image if the element index is invalid?
+		const index = parseInt(req.body.index)
+		if(index < elements.length)
 		{
-			// TODO: Delete the image if the answer index is invalid?
-			const index = parseInt(req.body.answerIndex)
-			if(index < question.answers.length)
-			{
-				question.answers[index].image = req.resultImage
-			}
+			elements[index].image = req.resultImage
+			res.send(req.resultImage)
 		}
 
 		else
 		{
-			question.image = req.resultImage
+			res.send("")
 		}
-
-		res.send(req.resultImage)
 	}
 
 	else
@@ -245,44 +235,49 @@ router.post("/image/add/:editId/:questionId", ensureAccess, ensureValidQuestion,
 	}
 })
 
-// Setter for a question within an editing context.
 router.post("/question/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
-	const question = editingContext[req.params.editId].questions[req.params.questionId]
+	const elements = editingContext[req.params.editId].questions[req.params.questionId].elements
 
-	if("question" in req.body)
+	const index = parseInt(req.body.index)
+	if(index < elements.length)
 	{
-		question.question = req.body.question
-	}
-
-	if("answer" in req.body)
-	{
-		if(!("answerIndex" in req.body))
+		if("value" in req.body)
 		{
-			res.sendStatus(400)
-			return
+			elements[index].value = req.body.value
 		}
-
-		question.answers[parseInt(req.body.answerIndex)].answer = req.body.answer
 	}
 
 	res.sendStatus(200)
 })
 
-// Getter for a question within an editing context.
-router.get("/question/:editId/:questionId", ensureAccess, ensureValidQuestion, (req, res) => {
-	const context = editingContext[req.params.editId]
-	const question = context.questions[req.params.questionId]
-	res.send(JSON.stringify(question))
-})
-
-router.get("/quizdata/:editId", ensureAccess, (req, res) => {
+router.get("/quizinfo/:editId", ensureAccess, (req, res) => {
 	const ctx = editingContext[req.params.editId]
 
 	res.send(JSON.stringify({
 		name: ctx.name,
-		category: ctx.category,
-		questions: Object.keys(ctx.questions)
+		category: ctx.category
 	}))
+})
+
+router.get("/quizdata/:editId", ensureAccess, (req, res) => {
+	const ctx = editingContext[req.params.editId]
+	const data = []
+
+	for (const [key, value] of Object.entries(ctx.questions)) {
+		data.push({
+			id: key,
+			elements: value.elements.map((e, index) => {
+				return {
+					index: index,
+					type: e.type,
+					value: e.value,
+					image: e.image
+				}
+			})
+		})
+	}
+
+	res.send(JSON.stringify(data))
 })
 
 module.exports.router = router

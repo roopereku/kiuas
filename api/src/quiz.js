@@ -48,7 +48,7 @@ router.get("/listings", (req, res) => {
 		})
 })
 
-router.get("/question/:questionId", (req, res) => {
+router.get("/quizinfo/:revisionId", (req, res) => {
 	// If the user isn't logged in, send an empty JSON body.
 	if(!login.isValidSession(req))
 	{
@@ -56,27 +56,15 @@ router.get("/question/:questionId", (req, res) => {
 		return
 	}
 
-	db.query("SELECT question, image FROM question WHERE id = $1", [ req.params.questionId ])
+	db.query("SELECT name, category FROM quiz WHERE id = (SELECT quizid FROM revision WHERE id = $1)",
+			[ req.params.revisionId ])
 		.then((rows) => {
 			if(rows.length > 0)
 			{
-				// Construct a result containing the question and a text answer field.
-				// TODO: Implement other gamemodes such as multiple selection.
-				const result = [
-					{
-						type: "question",
-						value: rows[0].question,
-						image: rows[0].image
-					},
-
-					{
-						type: "answer",
-						value: "",
-						image: ""
-					}
-				]
-
-				res.send(JSON.stringify(result))
+				res.send(JSON.stringify({
+					name: rows[0].name,
+					category: rows[0].category
+				}))
 			}
 
 			else
@@ -86,7 +74,6 @@ router.get("/question/:questionId", (req, res) => {
 		})
 })
 
-// Returns the ID for question for every question within the given revision of a quiz.
 router.get("/quizdata/:revisionId", (req, res) => {
 	// If the user isn't logged in, send an empty JSON body.
 	if(!login.isValidSession(req))
@@ -96,11 +83,12 @@ router.get("/quizdata/:revisionId", (req, res) => {
 	}
 
 	// Get IDs of questions for the given revision if the requester has access to them.
-	db.query("SELECT questions, quizId FROM revision WHERE id = $1 AND $2 = ANY(authorized)",
+	db.query("SELECT questions FROM revision WHERE id = $1 AND $2 = ANY(authorized)",
 			[ req.params.revisionId, login.getUsername(req) ])
 		.then((rows) => {
 			if(rows.length > 0)
 			{
+				// Shuffle the returned questions.
 				const questionIds = rows[0].questions
 					.map(id => ({ id , sort: Math.random() }))
 					.sort((a, b) => a.sort - b.sort)
@@ -115,14 +103,43 @@ router.get("/quizdata/:revisionId", (req, res) => {
 					}
 				}
 
-				// Get the name of the quiz.
-				db.query("SELECT name, category FROM quiz WHERE id = $1", [ rows[0].quizid ])
+				// Get the questions that have been selected.
+				db.query("SELECT id, elements FROM question WHERE id = ANY($1)", [ questionIds ])
 					.then((rows) => {
-						res.send(JSON.stringify({
-							name: rows[0].name,
-							category: rows[0].category,
-							questions: questionIds
-						}))
+						const questions = []
+
+						// For each question, get the elements.
+						// TODO: Get random answers when multiple selection gamemode is implemented.
+						rows.forEach((row) => {
+							db.query("SELECT type, value, image FROM element WHERE id = ANY($1)",
+								[ row.elements ])
+								.then((elements) => {
+									questions.push({
+										id: row.id,
+										elements: elements.map((e) => {
+											// TODO: Only show one answer text field?
+											//  Need to think about the case where there
+											//  are multiple answers and all of them have images.
+
+											// TODO: Don't clear the answers when in card mode?
+
+											// Clear the answer text fields.
+											if(e.type === "answer")
+											{
+												e.value = ""
+											}
+
+											return e
+										})
+									})
+
+									// When all questions have been collected, send the result.
+									if(questions.length === questionIds.length)
+									{
+										res.send(JSON.stringify(questions))
+									}
+								})
+						})
 					})
 			}
 

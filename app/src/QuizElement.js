@@ -63,14 +63,7 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 					readOnly={isReadOnly()}
 					onChange={(e) => {
 						setTextValue(e.target.value)
-
-						const body = {}
-						body[data.type] = e.target.value
-
-						if(data.type === "answer")
-						{
-							body["answerIndex"] = data.answerIndex
-						}
+						data.value = e.target.value
 
 						fetch("api/edit/question/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
 							method: "POST",
@@ -78,7 +71,10 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 								  'Accept': 'application/json',
 								  'Content-Type': 'application/json'
 							},
-							body: JSON.stringify(body)
+							body: JSON.stringify({
+								value: e.target.value,
+								index: data.index
+							})
 						})
 					}}
 				/>
@@ -98,11 +94,7 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 												onChange={(e) => {
 													const body = new FormData()
 													body.append("image", e.target.files[0])
-
-													if(data.type === "answer")
-													{
-														body.append("answerIndex", data.answerIndex)
-													}
+													body.append("index", data.index)
 
 													fetch("api/edit/image/add/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
 														method: "POST",
@@ -123,19 +115,15 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 												themeType="contained"
 												theme="primary"
 												onClick={() => {
-													const body = {}
-													if(data.type === "answer")
-													{
-														body["answerIndex"] = data.answerIndex
-													}
-
 													fetch("api/edit/image/remove/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
 														method: "POST",
 														headers: {
 															  'Accept': 'application/json',
 															  'Content-Type': 'application/json'
 														},
-														body: JSON.stringify(body)
+														body: JSON.stringify({
+															index: data.index
+														})
 													})
 														.then((res) => {
 															setImageValue("")
