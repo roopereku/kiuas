@@ -27,51 +27,70 @@ import
 	RemoveCircleSVGIcon,
 	SettingsSVGIcon,
 	EditSVGIcon,
-	HomeSVGIcon
+	HomeSVGIcon,
+	CheckSVGIcon,
+	CloseSVGIcon
 }
 
 from "@react-md/material-icons"
 
 const QuizView = ({selected, goHome}) => {
-const [quizName, setQuizName] = useState(selected.name)
-const [quizCategory, setQuizCategory] = useState(selected.category)
-const [selectedIndex, setSelectedIndex] = useState(0)
-const [selectorsVisible, setSelectorsVisible] = useState(false)
+	const [quizName, setQuizName] = useState(selected.name)
+	const [quizCategory, setQuizCategory] = useState(selected.category)
 
-const [quizElements, setQuizElements] = useState([])
+	const [selectorsVisible, setSelectorsVisible] = useState(false)
+	const [selectedIndex, setSelectedIndex] = useState(0)
+	const [quizElements, setQuizElements] = useState([])
 
-const [settingsVisible, setSettingsVisible] = useState(false)
-const [settings, setSettings] = useState({ construct: () => {} })
+	const [settingsVisible, setSettingsVisible] = useState(false)
+	const [settings, setSettings] = useState({ construct: () => {} })
 
-useEffect(() => {
-	const path = selected.isEditing ? "api/edit/quizinfo/" : "api/quiz/quizinfo/"
-	fetch(path + selected.id)
-		.then((res) => res.json())
-		.then((json) => {
-			console.log(json)
-			setQuizName(json.name)
-			setQuizCategory(json.category)
-		})
+	useEffect(() => {
+		const path = selected.isEditing ? "api/edit/quizinfo/" : "api/quiz/quizinfo/"
+		fetch(path + selected.id)
+			.then((res) => res.json())
+			.then((json) => {
+				console.log(json)
+				setQuizName(json.name)
+				setQuizCategory(json.category)
+			})
 
-	updateElements()
-}, [])
+		updateElements()
+	}, [])
 
-const updateElements = () => {
-	const path = selected.isEditing ? "api/edit/quizdata/" : "api/quiz/quizdata/"
-	fetch(path + selected.id)
-		.then((res) => res.json())
-		.then((data) => {
-			console.log("Got data", data)
-			setQuizElements(data)
-		})
-}
+	const updateElements = () => {
+		const path = selected.isEditing ? "api/edit/quizdata/" : "api/quiz/quizdata/"
+		fetch(path + selected.id)
+			.then((res) => res.json())
+			.then((data) => {
+				data.forEach((e) => {
+					e.selectorStatus = "waiting"
+				})
 
-return (
-	<QuizContext.Provider value={{
-		getSelectedQuestion: () => quizElements[selectedIndex].id,
-		quizId: selected.id,
-		isEditing: selected.isEditing
-	}}>
+				setQuizElements(data)
+			})
+	}
+
+	const getSelectorIcon = (element) => {
+		if(element.selectorStatus === "correct")
+		{
+			return ( <CheckSVGIcon /> )
+		}
+
+		else if(element.selectorStatus === "incorrect")
+		{
+			return ( <CloseSVGIcon /> )
+		}
+
+		return null
+	}
+
+	return (
+		<QuizContext.Provider value={{
+			getSelectedQuestion: () => quizElements[selectedIndex].id,
+			quizId: selected.id,
+			isEditing: selected.isEditing
+		}}>
 		<AppBar
 			id="quizBar"
 			fixed
@@ -274,7 +293,41 @@ return (
 			<Button
 				themeType="contained"
 				theme="primary"
-				onClick={() => {}}
+				onClick={() => {
+					const answerElements = []
+					const guesses = []
+
+					quizElements[selectedIndex].elements.forEach((e, index) => {
+						if(e.type === "answer")
+						{
+							answerElements.push(index)
+							guesses.push(e.value)
+						}
+					})
+
+					fetch("api/quiz/check/" + quizElements[selectedIndex].id, {
+						method: "POST",
+						headers: {
+							  'Accept': 'application/json',
+							  'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							guess: guesses
+						})
+					})
+						.then((res) => res.json())
+						.then((json) => {
+							let incorrect = 0
+
+							json.result.forEach((correct, index) => {
+								if(!correct)
+								{
+									incorrect++
+
+								}
+							})
+						})
+				}}
 			>
 				Submit
 			</Button>
@@ -303,15 +356,17 @@ return (
 			onRequestClose={() => setSelectorsVisible(false)}
 			position="bottom"
 		>
-			{quizElements.map((_, index) => {
+			{quizElements.map((e, index) => {
 					return (
 						<Chip
 							key={"Selector" + index.toString()}
 							onClick={() => {
 								setSelectedIndex(index)
 							}}
+							rightIcon={getSelectorIcon(e)}
 							selected={index === selectedIndex}
 							selectedThemed
+							theme="primary"
 						>
 							{index + 1}
 						</Chip>

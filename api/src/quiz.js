@@ -1,5 +1,6 @@
 const crypto = require("crypto")
 const express = require("express")
+const bodyParser = require("body-parser")
 const cookieParser = require("cookie-parser")
 
 const login = require("./login.js")
@@ -8,10 +9,15 @@ const db = require("./database.js")
 
 const router = express.Router()
 router.use(cookieParser())
+router.use(bodyParser.json())
 
 const isValidRevision = (revisionId) => {
 	// TODO: Get this from the database.
 	return true
+}
+
+const normalizeAnswer = (value) => {
+	return value
 }
 
 router.get("/listings", (req, res) => {
@@ -147,6 +153,48 @@ router.get("/quizdata/:revisionId", (req, res) => {
 			{
 				res.send("{}")
 			}
+		})
+})
+
+router.post("/check/:questionId", (req, res) => {
+	if(!login.isValidSession(req) || !("guess" in req.body))
+	{
+		res.send("{}")
+		return
+	}
+
+	// TODO: Make sure that the requester has access to the question.
+
+	// Get all answers that are associated with this question.
+	db.query("SELECT value FROM element WHERE TYPE = 'answer' AND id IN (SELECT unnest(elements) FROM question WHERE id = $1)",
+			[ req.params.questionId ])
+		.then((rows) => {
+			const results = []
+
+			if(rows.length > 0)
+			{
+				// Match every guess against every possible answer.
+				req.body.guess.forEach((value) => {
+					const normalized = normalizeAnswer(value)
+					let correct = false
+
+					// TODO: Keep normalized answers in the database?
+					for(const i in rows)
+					{
+						if(normalized === normalizeAnswer(rows[i].value))
+						{
+							correct = true
+							break
+						}
+					}
+
+					results.push(correct)
+				})
+			}
+
+			res.send(JSON.stringify({
+				result: results
+			}))
 		})
 })
 

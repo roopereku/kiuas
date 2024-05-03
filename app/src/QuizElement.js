@@ -65,17 +65,20 @@ const QuizElement = ({data, setSettings, setSettingsVisible}) => {
 						setTextValue(e.target.value)
 						data.value = e.target.value
 
-						fetch("api/edit/question/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
-							method: "POST",
-							headers: {
-								  'Accept': 'application/json',
-								  'Content-Type': 'application/json'
-							},
-							body: JSON.stringify({
-								value: e.target.value,
-								index: data.index
+						if(ctx.isEditing)
+						{
+							fetch("api/edit/question/" + ctx.quizId + "/" + ctx.getSelectedQuestion(), {
+								method: "POST",
+								headers: {
+									  'Accept': 'application/json',
+									  'Content-Type': 'application/json'
+								},
+								body: JSON.stringify({
+									value: e.target.value,
+									index: data.index
+								})
 							})
-						})
+						}
 					}}
 				/>
 
